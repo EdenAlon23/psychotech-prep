@@ -38,31 +38,36 @@ export default function HomePage() {
 
   return (
     <div className="grid" style={{ gap: '1.25rem' }}>
-      <DeveloperCard />
       <section className="hero">
-        <div className="row spread" style={{ alignItems: 'flex-start' }}>
-          <div style={{ maxWidth: 560 }}>
+        <div className="hero-grid">
+          <div>
+            <div className="hero-eyebrow">PSYCHOTECH PREP · FREE PRACTICE</div>
             <h1>הכנה למבחנים הפסיכוטכניים {settings.name ? `· ${settings.name}` : ''}</h1>
             <p>לצו ראשון (דפ"ר), למבחני המיון של משטרת ישראל ולכל מבחן פסיכוטכני ממוחשב: סימולציות מלאות עם זמן, תרגול לפי נושאים, מעקב התקדמות ותרגול ממוקד לפי החולשות שלך. חינם.</p>
             <div className="row mt">
               <button className="btn" onClick={() => { const p = simulationPlan('full', attempts); if (p) start(p); }}>▶ סימולציה מלאה</button>
               <button className="btn btn-ghost" onClick={() => start(focusPlan(attempts))}>🎯 תרגול ממוקד</button>
             </div>
-          </div>
-          {settings.examDate ? (
-            <div>
-              <div className="small" style={{ opacity: 0.85, marginBottom: 6 }}>{countdown.past ? 'יום המבחן הגיע – בהצלחה!' : 'עד המבחן'}</div>
-              {!countdown.past && (
-                <div className="countdown">
-                  <div><b>{countdown.days}</b>ימים</div>
-                  <div><b>{countdown.hours}</b>שעות</div>
-                </div>
+            <div className="row mt">
+              {settings.examDate ? (
+                countdown.past ? (
+                  <span className="small">יום המבחן הגיע – בהצלחה! · <Link to="/settings" style={{ color: '#fff' }}>שינוי תאריך</Link></span>
+                ) : (
+                  <>
+                    <span className="small" style={{ opacity: 0.85 }}>עד המבחן:</span>
+                    <div className="countdown">
+                      <div><b>{countdown.days}</b>ימים</div>
+                      <div><b>{countdown.hours}</b>שעות</div>
+                    </div>
+                    <Link to="/settings" className="small" style={{ color: '#fff', opacity: 0.8 }}>שינוי</Link>
+                  </>
+                )
+              ) : (
+                <Link to="/settings" className="small" style={{ color: '#fff', opacity: 0.85 }}>📅 הגדר תאריך מבחן לספירה לאחור</Link>
               )}
-              <Link to="/settings" className="small" style={{ color: '#fff', opacity: 0.8 }}>שינוי תאריך</Link>
             </div>
-          ) : (
-            <Link to="/settings" className="btn btn-ghost btn-sm">📅 הגדר תאריך מבחן לספירה לאחור</Link>
-          )}
+          </div>
+          <DeveloperCard />
         </div>
       </section>
 
