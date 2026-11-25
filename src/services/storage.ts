@@ -72,10 +72,10 @@ export function removeMistake(questionId: string): void {
 
 // ---------- Settings ----------
 export interface Settings {
-  examDate: string; // ISO date
+  examDate: string; // ISO date; empty = not set (countdown hidden)
   name: string;
 }
-const DEFAULT_SETTINGS: Settings = { examDate: '2026-11-29', name: '' };
+const DEFAULT_SETTINGS: Settings = { examDate: '', name: '' };
 export const getSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEYS.settings, {}) });
 export const saveSettings = (s: Settings): void => write(KEYS.settings, s);
 

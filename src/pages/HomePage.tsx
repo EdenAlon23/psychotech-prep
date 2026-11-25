@@ -15,7 +15,7 @@ function useCountdown(targetIso: string) {
     const t = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(t);
   }, []);
-  const target = new Date(`${targetIso}T08:00:00`).getTime();
+  const target = targetIso ? new Date(`${targetIso}T08:00:00`).getTime() : 0;
   const diff = Math.max(0, target - now);
   return { days: Math.floor(diff / 86_400_000), hours: Math.floor((diff % 86_400_000) / 3_600_000), past: target < now };
 }
@@ -49,16 +49,20 @@ export default function HomePage() {
               <button className="btn btn-ghost" onClick={() => start(focusPlan(attempts))}>🎯 תרגול ממוקד</button>
             </div>
           </div>
-          <div>
-            <div className="small" style={{ opacity: 0.85, marginBottom: 6 }}>{countdown.past ? 'יום המבחן הגיע – בהצלחה!' : 'עד המבחן'}</div>
-            {!countdown.past && (
-              <div className="countdown">
-                <div><b>{countdown.days}</b>ימים</div>
-                <div><b>{countdown.hours}</b>שעות</div>
-              </div>
-            )}
-            <Link to="/settings" className="small" style={{ color: '#fff', opacity: 0.8 }}>שינוי תאריך</Link>
-          </div>
+          {settings.examDate ? (
+            <div>
+              <div className="small" style={{ opacity: 0.85, marginBottom: 6 }}>{countdown.past ? 'יום המבחן הגיע – בהצלחה!' : 'עד המבחן'}</div>
+              {!countdown.past && (
+                <div className="countdown">
+                  <div><b>{countdown.days}</b>ימים</div>
+                  <div><b>{countdown.hours}</b>שעות</div>
+                </div>
+              )}
+              <Link to="/settings" className="small" style={{ color: '#fff', opacity: 0.8 }}>שינוי תאריך</Link>
+            </div>
+          ) : (
+            <Link to="/settings" className="btn btn-ghost btn-sm">📅 הגדר תאריך מבחן לספירה לאחור</Link>
+          )}
         </div>
       </section>
 
