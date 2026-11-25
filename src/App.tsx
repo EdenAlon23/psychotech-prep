@@ -61,8 +61,7 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="footer">
-        פותח על ידי <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{DEVELOPER.name}</a> ·{' '}
-        <a href="https://github.com/EdenAlon23/psychotech-prep" target="_blank" rel="noopener noreferrer">קוד המקור ב-GitHub</a>
+        נוצר על ידי <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{DEVELOPER.name}</a>
         <br />
         כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד.
       </footer>
