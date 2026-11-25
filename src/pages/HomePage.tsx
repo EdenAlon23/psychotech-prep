@@ -7,6 +7,7 @@ import { focusPlan, practicePlan, simulationPlan } from '../services/questionEng
 import { setActivePlan } from '../services/session';
 import { getAttempts, getMistakes, getSettings } from '../services/storage';
 import type { QuizPlan } from '../models/attempt';
+import { DeveloperCard } from '../components/DeveloperCard';
 
 function useCountdown(targetIso: string) {
   const [now, setNow] = useState(Date.now());
@@ -37,11 +38,12 @@ export default function HomePage() {
 
   return (
     <div className="grid" style={{ gap: '1.25rem' }}>
+      <DeveloperCard />
       <section className="hero">
         <div className="row spread" style={{ alignItems: 'flex-start' }}>
           <div style={{ maxWidth: 560 }}>
             <h1>הכנה למבחנים הפסיכוטכניים {settings.name ? `· ${settings.name}` : ''}</h1>
-            <p>סימולציות מלאות עם זמן, תרגול לפי נושאים, מעקב התקדמות ותרגול ממוקד לפי החולשות שלך – לקראת מבחני המיון.</p>
+            <p>לצו ראשון (דפ"ר), למבחני המיון של משטרת ישראל ולכל מבחן פסיכוטכני ממוחשב: סימולציות מלאות עם זמן, תרגול לפי נושאים, מעקב התקדמות ותרגול ממוקד לפי החולשות שלך. חינם.</p>
             <div className="row mt">
               <button className="btn" onClick={() => { const p = simulationPlan('full', attempts); if (p) start(p); }}>▶ סימולציה מלאה</button>
               <button className="btn btn-ghost" onClick={() => start(focusPlan(attempts))}>🎯 תרגול ממוקד</button>

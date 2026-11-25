@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, NavLink, Route, Routes, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import { DEVELOPER } from './components/DeveloperCard';
 
 // Route-level code splitting: the quiz engine & content load only when needed.
 const PracticePage = lazy(() => import('./pages/PracticePage'));
@@ -60,7 +61,10 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="footer">
-        כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד. · <a href="https://github.com/EdenAlon23/psychotech-prep">GitHub</a>
+        פותח על ידי <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{DEVELOPER.name}</a> ·{' '}
+        <a href="https://github.com/EdenAlon23/psychotech-prep" target="_blank" rel="noopener noreferrer">קוד המקור ב-GitHub</a>
+        <br />
+        כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד.
       </footer>
     </HashRouter>
   );

@@ -223,3 +223,7 @@ kbd { background: var(--surface-2); border: 1px solid var(--border); border-radi
 /* Fixes after visual QA */
 .grid > .card + .card { margin-top: 0; }
 .choice.figure-choice .fig-cell { max-width: 120px; margin: 0 auto; }
+
+/* Developer credit */
+.dev-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0.85rem 1.1rem; }
+.dev-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 1.05rem; flex: none; }
