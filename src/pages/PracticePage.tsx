@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { SectionId } from '../models/question';
 import { SECTIONS, SECTION_BY_ID } from '../data/sections';
 import { subtypeStats } from '../services/analytics';
@@ -8,6 +8,8 @@ import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 import { accuracyColor } from '../components/Charts';
 import { currentExam, examSections } from '../services/profile';
+import { getVocabProgress } from '../services/storage';
+import { summarize } from '../services/vocab';
 
 export default function PracticePage() {
   const navigate = useNavigate();
@@ -55,6 +57,8 @@ export default function PracticePage() {
         ))}
       </div>
 
+      {meta.id === 'hebrew' && <VocabCta />}
+
       <div className="grid grid-2">
         <div className="card">
           <h2>{meta.icon} {meta.title}</h2>
@@ -89,6 +93,27 @@ export default function PracticePage() {
           <h3>📌 איך לפתור</h3>
           <ul className="tips">{meta.tips.map((t) => <li key={t}>{t}</li>)}</ul>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Shown before Hebrew practice: read the glossary first, then answer. */
+function VocabCta() {
+  const s = useMemo(() => summarize(getVocabProgress()), []);
+  const toReview = s.missed + s.due;
+  return (
+    <div className="card mb row spread prep-cta">
+      <div>
+        <h3 style={{ margin: 0 }}>📚 לפני שעונים: עבור על אוצר המילים</h3>
+        <p className="small muted" style={{ margin: 0 }}>
+          {s.total} מילים, ביטויים ומילות קישור מתוך השאלות · {s.known} ידועים
+          {toReview > 0 ? ` · ${toReview} לחזרה היום` : ''}
+        </p>
+      </div>
+      <div className="row">
+        <Link className="btn btn-ghost btn-sm" to="/vocab?mode=read">דף לימוד</Link>
+        <Link className="btn btn-sm" to="/vocab?mode=cards">{toReview > 0 ? `חזרה (${toReview})` : 'כרטיסיות'}</Link>
       </div>
     </div>
   );

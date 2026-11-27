@@ -5,6 +5,7 @@ import { QuestionView } from '../components/QuestionView';
 import { SECTION_BY_ID } from '../data/sections';
 import { clearActivePlan, getActivePlan } from '../services/session';
 import { markMistakeRetried, recordMistakes, saveAttempt } from '../services/storage';
+import { applyQuizAnswers } from '../services/vocab';
 import { uid } from '../utils/random';
 
 type Phase = 'intro' | 'running';
@@ -68,6 +69,8 @@ export default function QuizPage() {
       sectionResults: blockResultsRef.current, questions,
     };
     saveAttempt(attempt);
+    // Words answered wrong go back to the start of the flashcard deck.
+    applyQuizAnswers(answers);
     if (plan.mode === 'mistakes') {
       answers.forEach((a) => a.chosenIndex >= 0 && markMistakeRetried(a.questionId, a.correct));
     } else {

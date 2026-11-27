@@ -17,6 +17,7 @@ const MistakesPage = lazy(() => import('./pages/MistakesPage'));
 const InterviewPage = lazy(() => import('./pages/InterviewPage'));
 const PersonalityPage = lazy(() => import('./pages/PersonalityPage'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
+const VocabPage = lazy(() => import('./pages/VocabPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const StartPage = lazy(() => import('./pages/StartPage'));
@@ -38,6 +39,7 @@ const NAV = [
   { to: '/', label: 'בית', end: true },
   { to: '/simulations', label: 'סימולציות' },
   { to: '/practice', label: 'תרגול' },
+  { to: '/vocab', label: 'אוצר מילים' },
   { to: '/analytics', label: 'ניתוח' },
   { to: '/mistakes', label: 'טעויות' },
   { to: '/interview', label: 'ראיון' },
@@ -79,6 +81,7 @@ export default function App() {
             <Route path="/interview" element={<PremiumGate feature="interview_coach" title="הכנה לראיון"><InterviewPage /></PremiumGate>} />
             <Route path="/personality" element={<PremiumGate feature="personality_analysis" title="שאלון אישיות"><PersonalityPage /></PremiumGate>} />
             <Route path="/guide" element={<GuidePage />} />
+            <Route path="/vocab" element={<VocabPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/upgrade" element={<UpgradePage />} />
             <Route path="*" element={<div className="card empty"><p>הדף לא נמצא</p><Link className="btn" to="/">לדף הבית</Link></div>} />

@@ -4,6 +4,7 @@ import type { Attempt, QuizBlock, QuizPlan } from '../models/attempt';
 import type { Question, SectionId } from '../models/question';
 import { analogyQuestions } from '../data/analogies';
 import { hebrewQuestions } from '../data/hebrew';
+import { vocabQuestions } from '../data/vocabulary';
 import { logicQuestions } from '../data/logic';
 import { SECTION_BY_ID, SIMULATIONS } from '../data/sections';
 import { generateAttention } from '../generators/attention';
@@ -37,7 +38,8 @@ const GENERATORS: Partial<Record<SectionId, Generator>> = {
 const BANKS: Partial<Record<SectionId, Question[]>> = {
   analogies: analogyQuestions,
   logic: logicQuestions,
-  hebrew: hebrewQuestions,
+  // Glossary-derived questions join the Hebrew bank, so they show up in practice, focus and simulations.
+  hebrew: [...hebrewQuestions, ...vocabQuestions],
   english: englishQuestions,
 };
 

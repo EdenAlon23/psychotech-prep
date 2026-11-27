@@ -8,6 +8,7 @@ import { launchPlan } from '../services/launcher';
 import { getAttempts, getMistakes } from '../services/storage';
 import { estimateScore, examById, examSections, getProfile, sectionAbility, todaysPlan } from '../services/profile';
 import type { QuizPlan } from '../models/attempt';
+import { DeveloperCard } from '../components/DeveloperCard';
 
 function useNow() {
   const [now, setNow] = useState(Date.now());
@@ -64,6 +65,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        <div className="hero-credit"><DeveloperCard /></div>
       </section>
 
       {/* Today's plan */}
@@ -143,6 +145,12 @@ export default function HomePage() {
               </div>
             );
           })}
+          {sections.includes('hebrew') && (
+            <Link to="/vocab" className="card section-card lift reveal" style={{ color: 'inherit' }}>
+              <span className="icon">📚</span><h3 style={{ margin: 0 }}>אוצר מילים לעברית</h3>
+              <p className="small muted" style={{ margin: 0 }}>דף לימוד להדפסה, כרטיסיות עם חזרה מרווחת ובוחן. מילים שטעית בהן חוזרות אוטומטית.</p>
+            </Link>
+          )}
           {exam.extras.includes('interview') && (
             <Link to="/interview" className="card section-card lift reveal" style={{ color: 'inherit' }}>
               <span className="icon">🗣️</span><h3 style={{ margin: 0 }}>ראיון עם מאבחנת</h3>
