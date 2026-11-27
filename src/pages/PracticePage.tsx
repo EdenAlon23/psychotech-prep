@@ -4,7 +4,7 @@ import type { SectionId } from '../models/question';
 import { SECTIONS, SECTION_BY_ID } from '../data/sections';
 import { subtypeStats } from '../services/analytics';
 import { bankSize, focusPlan, isGenerated, practicePlan, subtypesOf } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 import { accuracyColor } from '../components/Charts';
 
@@ -27,8 +27,7 @@ export default function PracticePage() {
   const toggle = (st: string) => setSelected((s) => (s.includes(st) ? s.filter((x) => x !== st) : [...s, st]));
 
   const start = () => {
-    setActivePlan(practicePlan(meta.id, count, selected, attempts, timed));
-    navigate('/quiz');
+    launchPlan(practicePlan(meta.id, count, selected, attempts, timed), navigate);
   };
 
   return (
@@ -43,7 +42,7 @@ export default function PracticePage() {
           <h3 style={{ margin: 0 }}>🎯 תרגול ממוקד חולשות</h3>
           <p className="small muted" style={{ margin: 0 }}>המערכת בוחרת שאלות לפי תתי-הנושאים שבהם הדיוק והקצב שלך הכי חלשים.</p>
         </div>
-        <button className="btn" onClick={() => { setActivePlan(focusPlan(attempts)); navigate('/quiz'); }}>התחל (20 שאלות)</button>
+        <button className="btn" onClick={() => launchPlan(focusPlan(attempts), navigate)}>התחל (20 שאלות)</button>
       </div>
 
       <div className="tabs">

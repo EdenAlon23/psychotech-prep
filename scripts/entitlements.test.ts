@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { decide, planFromLicense, OFFLINE_GRACE_MS, featureForPlan } from '../src/services/entitlements';
+assert.deepEqual(decide(null, 999), { allowed: true, remaining: null });
+assert.deepEqual(decide(0, 0), { allowed: false, reason: 'locked' });
+assert.deepEqual(decide(30, 20, 10), { allowed: true, remaining: 0 });
+assert.deepEqual(decide(30, 25, 10), { allowed: false, reason: 'daily_limit' });
+const now = Date.parse('2026-11-27T12:00:00Z');
+const lic = { key: 'k'.repeat(20), plan: 'pass' as const, validUntil: '2027-01-01T00:00:00Z', checkedAt: now - 1000 };
+assert.equal(planFromLicense(lic, now), 'pass');
+assert.equal(planFromLicense({ ...lic, validUntil: '2026-01-01T00:00:00Z' }, now), 'free');
+assert.equal(planFromLicense({ ...lic, checkedAt: now - OFFLINE_GRACE_MS - 1 }, now), 'free');
+assert.equal(planFromLicense(null, now), 'free');
+assert.deepEqual(featureForPlan({ mode: 'simulation', simulationId: 'full', title: '', immediateFeedback: false, blocks: [] }), { feature: 'simulation_all', amount: 1 });
+assert.deepEqual(featureForPlan({ mode: 'practice', title: '', immediateFeedback: true, blocks: [{ section: 'math', title: '', questions: [{}, {}] as never }] }), { feature: 'practice_questions', amount: 2 });
+console.log('entitlement checks passed');

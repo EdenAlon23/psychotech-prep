@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SECTION_BY_ID, SIMULATIONS } from '../data/sections';
 import { attemptScore } from '../services/analytics';
 import { simulationPlan } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { checkAccess } from '../services/entitlements';
+import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 
 export default function SimulationsPage() {
@@ -13,8 +14,7 @@ export default function SimulationsPage() {
   const start = (id: string) => {
     const plan = simulationPlan(id, attempts);
     if (!plan) return;
-    setActivePlan(plan);
-    navigate('/quiz');
+    launchPlan(plan, navigate);
   };
 
   return (
@@ -34,6 +34,7 @@ export default function SimulationsPage() {
               <div className="row spread">
                 <h2 style={{ margin: 0 }}>{sim.title}</h2>
                 {best !== null && <span className="chip good">שיא: {best}%</span>}
+                {!checkAccess(sim.id === 'short' ? 'simulation_short' : 'simulation_all', 0).allowed && <span className="chip warn">🔒 במנוי</span>}
               </div>
               <p className="muted" style={{ margin: 0 }}>{sim.description}</p>
               <div className="row">

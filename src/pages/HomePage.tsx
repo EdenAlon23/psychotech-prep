@@ -4,7 +4,7 @@ import { accuracyColor } from '../components/Charts';
 import { SECTIONS } from '../data/sections';
 import { attemptScore, practiceDays, recommendations, sectionStats } from '../services/analytics';
 import { focusPlan, practicePlan, simulationPlan } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { launchPlan } from '../services/launcher';
 import { getAttempts, getMistakes, getSettings } from '../services/storage';
 import type { QuizPlan } from '../models/attempt';
 import { DeveloperCard } from '../components/DeveloperCard';
@@ -32,8 +32,7 @@ export default function HomePage() {
   const totalCorrect = attempts.reduce((s, a) => s + a.answers.filter((x) => x.correct).length, 0);
 
   const start = (plan: QuizPlan) => {
-    setActivePlan(plan);
-    navigate('/quiz');
+    launchPlan(plan, navigate);
   };
 
   return (

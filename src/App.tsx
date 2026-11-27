@@ -1,7 +1,10 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, NavLink, Route, Routes, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import { DEVELOPER } from './components/DeveloperCard';
+import PremiumGate from './components/PremiumGate';
+import { paywallEnabled } from './services/entitlements';
+import { refreshLicense } from './services/license';
 
 // Route-level code splitting: the quiz engine & content load only when needed.
 const PracticePage = lazy(() => import('./pages/PracticePage'));
@@ -14,6 +17,7 @@ const InterviewPage = lazy(() => import('./pages/InterviewPage'));
 const PersonalityPage = lazy(() => import('./pages/PersonalityPage'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 
 const NAV = [
   { to: '/', label: 'בית', end: true },
@@ -31,6 +35,8 @@ const NAV = [
  * any static host with no server-side rewrite rules.
  */
 export default function App() {
+  // Re-check a stored license once a day so refunded keys stop working.
+  useEffect(() => { if (paywallEnabled()) void refreshLicense(); }, []);
   return (
     <HashRouter>
       <header className="app-header">
@@ -52,10 +58,11 @@ export default function App() {
             <Route path="/results/:id" element={<ResultsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/mistakes" element={<MistakesPage />} />
-            <Route path="/interview" element={<InterviewPage />} />
-            <Route path="/personality" element={<PersonalityPage />} />
+            <Route path="/interview" element={<PremiumGate feature="interview_coach" title="הכנה לראיון"><InterviewPage /></PremiumGate>} />
+            <Route path="/personality" element={<PremiumGate feature="personality_analysis" title="שאלון אישיות"><PersonalityPage /></PremiumGate>} />
             <Route path="/guide" element={<GuidePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/upgrade" element={<UpgradePage />} />
             <Route path="*" element={<div className="card empty"><p>הדף לא נמצא</p><Link className="btn" to="/">לדף הבית</Link></div>} />
           </Routes>
         </Suspense>
