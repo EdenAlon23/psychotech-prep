@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "validate": "tsx scripts/validate.ts",
-    "test": "tsx scripts/entitlements.test.ts"
+    "test": "tsx scripts/entitlements.test.ts && tsx scripts/content.test.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

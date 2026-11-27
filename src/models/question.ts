@@ -12,7 +12,11 @@ export type SectionId =
   | 'figures'
   | 'attention'
   | 'logic'
-  | 'hebrew';
+  | 'hebrew'
+  // English-language sections (psychometric English, SAT, GMAT)
+  | 'english'
+  | 'quantEn'
+  | 'dataSufficiency';
 
 export type ShapeKind = 'circle' | 'square' | 'triangle' | 'diamond' | 'hexagon';
 export type FillKind = 'empty' | 'striped' | 'full';
@@ -54,6 +58,8 @@ export interface Question {
   answerIndex: number;
   explanation: string;
   difficulty: Difficulty;
+  /** English content is rendered left-to-right. */
+  dir?: 'ltr';
 }
 
 export interface SectionMeta {
@@ -65,4 +71,6 @@ export interface SectionMeta {
   /** Target seconds per question – used for pace feedback. */
   targetSecPerQuestion: number;
   tips: string[];
+  /** 'en' sections are rendered LTR. */
+  lang?: 'he' | 'en';
 }

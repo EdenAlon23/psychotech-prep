@@ -8,6 +8,9 @@ import { generateAttention } from '../generators/attention';
 import { generateFigure } from '../generators/figures';
 import { generateInstructions } from '../generators/instructions';
 import { generateMath } from '../generators/math';
+import { generateDataSufficiency } from '../generators/dataSufficiency';
+import { generateQuantEn } from '../generators/quantEn';
+import { englishQuestions } from '../data/english';
 import { generateNumberSeries } from '../generators/numberSeries';
 import { createRng, randomSeed, shuffle, type Rng } from '../utils/random';
 import { subtypeStats } from './analytics';
@@ -25,12 +28,15 @@ const GENERATORS: Partial<Record<SectionId, Generator>> = {
   math: generateMath,
   figures: generateFigure,
   attention: generateAttention,
+  quantEn: generateQuantEn,
+  dataSufficiency: generateDataSufficiency,
 };
 
 const BANKS: Partial<Record<SectionId, Question[]>> = {
   analogies: analogyQuestions,
   logic: logicQuestions,
   hebrew: hebrewQuestions,
+  english: englishQuestions,
 };
 
 export const isGenerated = (section: SectionId): boolean => section in GENERATORS;
