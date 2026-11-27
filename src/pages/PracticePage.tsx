@@ -7,12 +7,14 @@ import { bankSize, focusPlan, isGenerated, practicePlan, subtypesOf } from '../s
 import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 import { accuracyColor } from '../components/Charts';
+import { currentExam, examSections } from '../services/profile';
 
 export default function PracticePage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const attempts = useMemo(() => getAttempts(), []);
-  const section = (params.get('s') as SectionId | null) ?? 'analogies';
+  const allowed = useMemo(() => examSections(currentExam()), []);
+  const section = (params.get('s') as SectionId | null) ?? allowed[0] ?? 'analogies';
   const meta = SECTION_BY_ID[section] ?? SECTIONS[0];
   const subtypes = useMemo(() => subtypesOf(meta.id), [meta.id]);
   const stByKey = useMemo(() => new Map(subtypeStats(attempts).map((s) => [`${s.section}|${s.subtype}`, s])), [attempts]);
@@ -46,7 +48,7 @@ export default function PracticePage() {
       </div>
 
       <div className="tabs">
-        {SECTIONS.map((s) => (
+        {SECTIONS.filter((s) => allowed.includes(s.id)).map((s) => (
           <button key={s.id} className={s.id === meta.id ? 'active' : ''} onClick={() => choose(s.id)}>
             {s.icon} {s.short}
           </button>
