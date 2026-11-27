@@ -4,7 +4,7 @@ import { QuestionView } from '../components/QuestionView';
 import { SECTIONS, SECTION_BY_ID } from '../data/sections';
 import type { SectionId } from '../models/question';
 import { mistakesPlan } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { launchPlan } from '../services/launcher';
 import { getMistakes, removeMistake } from '../services/storage';
 import { shuffle, createRng, randomSeed } from '../utils/random';
 
@@ -18,8 +18,7 @@ export default function MistakesPage() {
 
   const retry = () => {
     const qs = shuffle(createRng(randomSeed()), filtered.map((m) => m.question)).slice(0, 20);
-    setActivePlan(mistakesPlan(qs));
-    navigate('/quiz');
+    launchPlan(mistakesPlan(qs), navigate);
   };
 
   return (

@@ -1,3 +1,5 @@
+import type { ExamDef } from '../data/exams';
+import { getProfile, sectionAbility, targetDifficulty } from './profile';
 import type { Attempt, QuizBlock, QuizPlan } from '../models/attempt';
 import type { Question, SectionId } from '../models/question';
 import { analogyQuestions } from '../data/analogies';
@@ -9,6 +11,9 @@ import { generateAttention } from '../generators/attention';
 import { generateFigure } from '../generators/figures';
 import { generateInstructions } from '../generators/instructions';
 import { generateMath } from '../generators/math';
+import { generateDataSufficiency } from '../generators/dataSufficiency';
+import { generateQuantEn } from '../generators/quantEn';
+import { englishQuestions } from '../data/english';
 import { generateNumberSeries } from '../generators/numberSeries';
 import { createRng, randomSeed, shuffle, type Rng } from '../utils/random';
 import { subtypeStats } from './analytics';
@@ -26,6 +31,8 @@ const GENERATORS: Partial<Record<SectionId, Generator>> = {
   math: generateMath,
   figures: generateFigure,
   attention: generateAttention,
+  quantEn: generateQuantEn,
+  dataSufficiency: generateDataSufficiency,
 };
 
 const BANKS: Partial<Record<SectionId, Question[]>> = {
@@ -33,6 +40,7 @@ const BANKS: Partial<Record<SectionId, Question[]>> = {
   logic: logicQuestions,
   // Glossary-derived questions join the Hebrew bank, so they show up in practice, focus and simulations.
   hebrew: [...hebrewQuestions, ...vocabQuestions],
+  english: englishQuestions,
 };
 
 export const isGenerated = (section: SectionId): boolean => section in GENERATORS;
@@ -55,6 +63,8 @@ interface BuildOptions {
   /** Ids answered before – unseen bank questions are preferred. */
   seenIds?: Set<string>;
   seed?: number;
+  /** Adaptive: prefer questions of this difficulty (bank items ±1 are used to fill). */
+  difficulty?: 1 | 2 | 3;
 }
 
 export function buildQuestions(section: SectionId, count: number, opts: BuildOptions = {}): Question[] {
@@ -66,14 +76,20 @@ export function buildQuestions(section: SectionId, count: number, opts: BuildOpt
     const runId = Math.floor(rng() * 1e9).toString(36);
     for (let i = 0; out.length < count && i < count * 60; i++) {
       const q = gen(rng, `${section}-${runId}-${i}`);
-      if (filterOk(q)) out.push(q);
+      // Adaptive: accept off-target difficulty only after many tries, so rare levels never stall generation.
+      const onTarget = !opts.difficulty || Math.abs(q.difficulty - opts.difficulty) <= (i < count * 20 ? 0 : 1);
+      if (filterOk(q) && onTarget) out.push(q);
     }
     return out;
   }
-  const bank = (BANKS[section] ?? []).filter(filterOk);
+  const all = (BANKS[section] ?? []).filter(filterOk);
+  // Adaptive: order the bank by distance from the target difficulty, keeping randomness inside each band.
+  const bank = opts.difficulty ? shuffle(rng, all).sort((a, b) => Math.abs(a.difficulty - opts.difficulty!) - Math.abs(b.difficulty - opts.difficulty!)) : all;
   const seen = opts.seenIds ?? new Set<string>();
   // Unseen first (shuffled), then seen (shuffled) – maximises exposure to new items.
-  const ordered = [...shuffle(rng, bank.filter((q) => !seen.has(q.id))), ...shuffle(rng, bank.filter((q) => seen.has(q.id)))];
+  const ordered = opts.difficulty
+    ? [...bank.filter((q) => !seen.has(q.id)), ...bank.filter((q) => seen.has(q.id))]
+    : [...shuffle(rng, bank.filter((q) => !seen.has(q.id))), ...shuffle(rng, bank.filter((q) => seen.has(q.id)))];
   const picked = ordered.slice(0, count);
   // Keep reading-comprehension questions of the same passage adjacent.
   return picked.sort((a, b) => Number(Boolean(a.passage)) - Number(Boolean(b.passage)) || (a.passage ?? '').localeCompare(b.passage ?? ''));
@@ -81,8 +97,9 @@ export function buildQuestions(section: SectionId, count: number, opts: BuildOpt
 
 export const seenIdsFrom = (attempts: Attempt[]): Set<string> => new Set(attempts.flatMap((a) => a.answers.map((x) => x.questionId)));
 
-export function practicePlan(section: SectionId, count: number, subtypes: string[], attempts: Attempt[], timed: boolean): QuizPlan {
+export function practicePlan(section: SectionId, count: number, subtypes: string[], attempts: Attempt[], timed: boolean, adaptive = true): QuizPlan {
   const meta = SECTION_BY_ID[section];
+  const difficulty = adaptive ? targetDifficulty(sectionAbility(attempts, section, getProfile()?.level ?? 2).ability) : undefined;
   return {
     mode: 'practice',
     title: `תרגול – ${meta.title}`,
@@ -90,8 +107,25 @@ export function practicePlan(section: SectionId, count: number, subtypes: string
     blocks: [{
       section, title: meta.title,
       timeLimitSec: timed ? Math.round(count * meta.targetSecPerQuestion) : undefined,
-      questions: buildQuestions(section, count, { subtypes, seenIds: seenIdsFrom(attempts) }),
+      questions: buildQuestions(section, count, { subtypes, seenIds: seenIdsFrom(attempts), difficulty }),
     }],
+  };
+}
+
+/** Full simulation built from the chosen exam's own structure (blocks, counts, minutes). */
+export function examSimulationPlan(exam: ExamDef, attempts: Attempt[]): QuizPlan {
+  const seen = seenIdsFrom(attempts);
+  return {
+    mode: 'simulation',
+    title: exam.simulation.title,
+    simulationId: `exam:${exam.id}`,
+    immediateFeedback: false,
+    blocks: exam.simulation.blocks.map<QuizBlock>((b) => ({
+      section: b.section,
+      title: b.label ?? SECTION_BY_ID[b.section].title,
+      timeLimitSec: Math.round(b.minutes * 60),
+      questions: buildQuestions(b.section, b.count, { seenIds: seen }),
+    })),
   };
 }
 

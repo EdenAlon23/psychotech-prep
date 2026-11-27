@@ -16,7 +16,7 @@ export function QuestionView({ question: q, selected, onSelect, reveal }: Props)
   const isFigure = q.choices.some((c) => c.figure);
   const hebrewBlock = q.codeBlock && /[֐-׿]/.test(q.codeBlock) && q.section === 'attention' && q.subtype === 'ספירת תווים';
   return (
-    <div>
+    <div dir={q.dir} lang={q.dir === 'ltr' ? 'en' : undefined}>
       {q.passage && <div className="passage">{q.passage}</div>}
       <div className="question-prompt">{q.prompt}</div>
       {q.codeBlock && <div className={`code-block${hebrewBlock ? ' hebrew' : ''}`}>{q.codeBlock}</div>}

@@ -4,9 +4,10 @@ import type { SectionId } from '../models/question';
 import { SECTIONS, SECTION_BY_ID } from '../data/sections';
 import { subtypeStats } from '../services/analytics';
 import { bankSize, focusPlan, isGenerated, practicePlan, subtypesOf } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 import { accuracyColor } from '../components/Charts';
+import { currentExam, examSections } from '../services/profile';
 import { getVocabProgress } from '../services/storage';
 import { summarize } from '../services/vocab';
 
@@ -14,7 +15,8 @@ export default function PracticePage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const attempts = useMemo(() => getAttempts(), []);
-  const section = (params.get('s') as SectionId | null) ?? 'analogies';
+  const allowed = useMemo(() => examSections(currentExam()), []);
+  const section = (params.get('s') as SectionId | null) ?? allowed[0] ?? 'analogies';
   const meta = SECTION_BY_ID[section] ?? SECTIONS[0];
   const subtypes = useMemo(() => subtypesOf(meta.id), [meta.id]);
   const stByKey = useMemo(() => new Map(subtypeStats(attempts).map((s) => [`${s.section}|${s.subtype}`, s])), [attempts]);
@@ -29,8 +31,7 @@ export default function PracticePage() {
   const toggle = (st: string) => setSelected((s) => (s.includes(st) ? s.filter((x) => x !== st) : [...s, st]));
 
   const start = () => {
-    setActivePlan(practicePlan(meta.id, count, selected, attempts, timed));
-    navigate('/quiz');
+    launchPlan(practicePlan(meta.id, count, selected, attempts, timed), navigate);
   };
 
   return (
@@ -45,11 +46,11 @@ export default function PracticePage() {
           <h3 style={{ margin: 0 }}>🎯 תרגול ממוקד חולשות</h3>
           <p className="small muted" style={{ margin: 0 }}>המערכת בוחרת שאלות לפי תתי-הנושאים שבהם הדיוק והקצב שלך הכי חלשים.</p>
         </div>
-        <button className="btn" onClick={() => { setActivePlan(focusPlan(attempts)); navigate('/quiz'); }}>התחל (20 שאלות)</button>
+        <button className="btn" onClick={() => launchPlan(focusPlan(attempts), navigate)}>התחל (20 שאלות)</button>
       </div>
 
       <div className="tabs">
-        {SECTIONS.map((s) => (
+        {SECTIONS.filter((s) => allowed.includes(s.id)).map((s) => (
           <button key={s.id} className={s.id === meta.id ? 'active' : ''} onClick={() => choose(s.id)}>
             {s.icon} {s.short}
           </button>

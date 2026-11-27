@@ -41,6 +41,21 @@ export const SECTIONS: SectionMeta[] = [
     description: 'אוצר מילים, הפכים, ביטויים, השלמת משפטים, דקדוק והבנת הנקרא.',
     tips: ['במילים לא מוכרות – חפשו שורש מוכר.', 'בהשלמת משפטים – מילות קישור ("למרות", "ולכן") קובעות את הכיוון.', 'בהבנת הנקרא – התשובה חייבת להיות כתובה/נובעת מהקטע, לא מידע כללי. מילים קיצוניות ("תמיד", "רק") – חשודות.'],
   },
+  {
+    id: 'english', title: 'אנגלית', short: 'אנגלית', icon: '🇬🇧', targetSecPerQuestion: 45, lang: 'en',
+    description: 'Vocabulary, sentence completion, restatements and analogies — for the psychometric English section, SAT and GMAT Verbal.',
+    tips: ['In sentence completion, find the signal word (although, because, despite) before reading the options.', 'Restatements must keep the exact meaning — watch for double negatives ("not without").', 'Learn word roots: bene = good, mal = bad, chron = time.'],
+  },
+  {
+    id: 'quantEn', title: 'Quantitative (English)', short: 'Quant', icon: '📐', targetSecPerQuestion: 90, lang: 'en',
+    description: 'Algebra, percents, ratios, averages, rates, probability and coordinate geometry — SAT Math / GMAT Quant style.',
+    tips: ['Write the equation before calculating.', 'Successive percent changes multiply — they do not add.', 'Average speed for a round trip is NOT the mean of the speeds.'],
+  },
+  {
+    id: 'dataSufficiency', title: 'Data Sufficiency', short: 'DS', icon: '⚖️', targetSecPerQuestion: 120, lang: 'en',
+    description: 'GMAT Data Insights: decide whether the statements give enough information — without solving fully.',
+    tips: ['Judge each statement alone first, then together.', 'For "yes/no" questions, a definite "no" is sufficient.', 'Two equations are not always enough: check they are independent.'],
+  },
 ];
 
 export const SECTION_BY_ID: Record<SectionId, SectionMeta> = Object.fromEntries(SECTIONS.map((s) => [s.id, s])) as Record<SectionId, SectionMeta>;

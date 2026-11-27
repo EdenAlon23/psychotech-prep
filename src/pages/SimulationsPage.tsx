@@ -2,8 +2,10 @@ import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SECTION_BY_ID, SIMULATIONS } from '../data/sections';
 import { attemptScore } from '../services/analytics';
-import { simulationPlan } from '../services/questionEngine';
-import { setActivePlan } from '../services/session';
+import { examSimulationPlan, simulationPlan } from '../services/questionEngine';
+import { currentExam } from '../services/profile';
+import { checkAccess } from '../services/entitlements';
+import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
 
 export default function SimulationsPage() {
@@ -13,8 +15,7 @@ export default function SimulationsPage() {
   const start = (id: string) => {
     const plan = simulationPlan(id, attempts);
     if (!plan) return;
-    setActivePlan(plan);
-    navigate('/quiz');
+    launchPlan(plan, navigate);
   };
 
   return (
@@ -23,7 +24,23 @@ export default function SimulationsPage() {
         <h1>סימולציות</h1>
         <p>מבנה כמו במכון המיון: כל פרק עם זמן נפרד, בלי משוב עד הסוף. בכל סימולציה השאלות חדשות.</p>
       </div>
-      <div className="grid grid-2">
+      {(() => {
+        const exam = currentExam();
+        const mine = attempts.filter((a) => a.simulationId === `exam:${exam.id}`);
+        const totalMin = exam.simulation.blocks.reduce((s, b) => s + b.minutes, 0);
+        const totalQ = exam.simulation.blocks.reduce((s, b) => s + b.count, 0);
+        return (
+          <div className="card section-card featured mb rise">
+            <div className="row spread"><h2 className="display" style={{ margin: 0 }}>{exam.icon} {exam.simulation.title}</h2>
+              {mine.length > 0 && <span className="chip good">שיא: {Math.max(...mine.map(attemptScore))}%</span>}</div>
+            <p className="muted" style={{ margin: 0 }}>במבנה של {exam.name}: כל פרק עם זמן משלו, בלי משוב עד הסוף.</p>
+            <div className="row"><span className="chip">⏱ {Math.round(totalMin)} דק'</span><span className="chip">{totalQ} שאלות</span><span className="chip">{exam.simulation.blocks.length} פרקים</span></div>
+            <div className="row"><button className="btn btn-gold" onClick={() => launchPlan(examSimulationPlan(exam, attempts), navigate)}>התחלה ▶</button>
+              {mine[0] && <Link className="btn btn-ghost" to={`/results/${mine[0].id}`}>תוצאה אחרונה</Link>}</div>
+          </div>
+        );
+      })()}
+      {['psychotech', 'tzav', 'police'].includes(currentExam().id) && <div className="grid grid-2">
         {SIMULATIONS.map((sim) => {
           const mine = attempts.filter((a) => a.simulationId === sim.id);
           const best = mine.length ? Math.max(...mine.map(attemptScore)) : null;
@@ -34,6 +51,7 @@ export default function SimulationsPage() {
               <div className="row spread">
                 <h2 style={{ margin: 0 }}>{sim.title}</h2>
                 {best !== null && <span className="chip good">שיא: {best}%</span>}
+                {!checkAccess(sim.id === 'short' ? 'simulation_short' : 'simulation_all', 0).allowed && <span className="chip warn">🔒 במנוי</span>}
               </div>
               <p className="muted" style={{ margin: 0 }}>{sim.description}</p>
               <div className="row">
@@ -54,7 +72,7 @@ export default function SimulationsPage() {
             </div>
           );
         })}
-      </div>
+      </div>}
       <div className="card mt">
         <h3>טיפים לסימולציה</h3>
         <ul className="tips">
