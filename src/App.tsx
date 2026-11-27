@@ -13,12 +13,14 @@ const MistakesPage = lazy(() => import('./pages/MistakesPage'));
 const InterviewPage = lazy(() => import('./pages/InterviewPage'));
 const PersonalityPage = lazy(() => import('./pages/PersonalityPage'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
+const VocabPage = lazy(() => import('./pages/VocabPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 const NAV = [
   { to: '/', label: 'בית', end: true },
   { to: '/simulations', label: 'סימולציות' },
   { to: '/practice', label: 'תרגול' },
+  { to: '/vocab', label: 'אוצר מילים' },
   { to: '/analytics', label: 'ניתוח' },
   { to: '/mistakes', label: 'טעויות' },
   { to: '/interview', label: 'ראיון' },
@@ -55,6 +57,7 @@ export default function App() {
             <Route path="/interview" element={<InterviewPage />} />
             <Route path="/personality" element={<PersonalityPage />} />
             <Route path="/guide" element={<GuidePage />} />
+            <Route path="/vocab" element={<VocabPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<div className="card empty"><p>הדף לא נמצא</p><Link className="btn" to="/">לדף הבית</Link></div>} />
           </Routes>

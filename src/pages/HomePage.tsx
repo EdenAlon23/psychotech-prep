@@ -115,6 +115,11 @@ export default function HomePage() {
               </div>
             );
           })}
+          <Link to="/vocab" className="card section-card" style={{ color: 'inherit' }}>
+            <span className="icon">📚</span>
+            <h3 style={{ margin: 0 }}>אוצר מילים לעברית</h3>
+            <p className="small muted" style={{ margin: 0 }}>דף לימוד להדפסה, כרטיסיות עם חזרה מרווחת ובוחן. מילים שטעית בהן חוזרות אוטומטית.</p>
+          </Link>
           <Link to="/interview" className="card section-card" style={{ color: 'inherit' }}>
             <span className="icon">🗣️</span>
             <h3 style={{ margin: 0 }}>ראיון עם מאבחנת</h3>

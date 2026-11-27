@@ -1,5 +1,6 @@
 import type { Attempt, MistakeEntry } from '../models/attempt';
 import type { Question } from '../models/question';
+import type { VocabProgress } from '../models/vocab';
 
 /**
  * Single persistence boundary. Everything lives in localStorage (no backend:
@@ -12,6 +13,7 @@ const KEYS = {
   settings: 'pp.settings.v1',
   interview: 'pp.interview.v1',
   personality: 'pp.personality.v1',
+  vocab: 'pp.vocab.v1',
 } as const;
 
 const MAX_ATTEMPTS_WITH_SNAPSHOT = 30;
@@ -94,6 +96,10 @@ export interface PersonalityRun {
 }
 export const getPersonalityRuns = (): PersonalityRun[] => read<PersonalityRun[]>(KEYS.personality, []);
 export const savePersonalityRun = (r: PersonalityRun): void => write(KEYS.personality, [r, ...getPersonalityRuns()].slice(0, 10));
+
+// ---------- Vocabulary (flashcard boxes) ----------
+export const getVocabProgress = (): VocabProgress => read<VocabProgress>(KEYS.vocab, {});
+export const saveVocabProgress = (p: VocabProgress): void => write(KEYS.vocab, p);
 
 // ---------- Backup ----------
 export function exportAll(): string {

@@ -8,6 +8,7 @@ import { attemptScore, estimatedLevel } from '../services/analytics';
 import { mistakesPlan, practicePlan } from '../services/questionEngine';
 import { setActivePlan } from '../services/session';
 import { getAttempt, getAttempts } from '../services/storage';
+import { entryForQuestion } from '../services/vocab';
 
 export default function ResultsPage() {
   const { id } = useParams();
@@ -45,6 +46,7 @@ export default function ResultsPage() {
   const reviewList = attempt.answers.filter((a) => (filter === 'wrong' ? !a.correct : true));
   const wrongQuestions = attempt.answers.filter((a) => !a.correct).map((a) => questionsById.get(a.questionId)).filter((q) => q !== undefined);
   const attempts = getAttempts();
+  const missedWords = attempt.answers.filter((a) => !a.correct && entryForQuestion(a.questionId)).length;
 
   return (
     <div className="grid" style={{ gap: '1.25rem' }}>
@@ -72,6 +74,16 @@ export default function ResultsPage() {
           <p className="small muted" style={{ margin: 0 }}>* הערכה גסה בלבד לפי אחוז ההצלחה. מכוני המיון מנרמלים מול אוכלוסיית נבחנים, ולכן זה לא ציון רשמי.</p>
         )}
       </div>
+
+      {missedWords > 0 && (
+        <div className="card row spread prep-cta">
+          <div>
+            <h3 style={{ margin: 0 }}>📚 {missedWords} מילים וביטויים שטעית בהם נוספו לכרטיסיות</h3>
+            <p className="small muted" style={{ margin: 0 }}>שנן אותם עכשיו, כשהטעות עוד טרייה. זה הזמן שבו הזיכרון נבנה הכי טוב.</p>
+          </div>
+          <Link className="btn btn-sm" to="/vocab?mode=cards&focus=missed">לחזרה על המילים</Link>
+        </div>
+      )}
 
       <div className="grid grid-2">
         <div className="card">
