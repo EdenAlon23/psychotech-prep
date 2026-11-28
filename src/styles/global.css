@@ -396,3 +396,16 @@ input[type=range] { accent-color: var(--gold); width: 100%; }
 /* Resumed-quiz notice */
 .resume-note { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .75rem; padding: .5rem .5rem .5rem .9rem; border-radius: 14px; background: color-mix(in srgb, var(--gold) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--border)); font-weight: 600; font-size: .95rem; animation: rise .35s var(--ease) both; }
 .resume-note .btn { min-width: 40px; min-height: 40px; flex: none; }
+
+/* Touch targets & legibility on phones (mobile audit: 360/390/768px) */
+@media (max-width: 900px), (pointer: coarse) {
+  .brand, .exam-chip, .nav a { min-height: 40px; display: inline-flex; align-items: center; }
+  .btn-sm, .tabs button, button.chip, .likert button { min-height: 40px; }
+  button.chip { padding-inline: 0.8rem; }
+  .q-nav { gap: 0.4rem; }
+  .q-nav button { width: 40px; height: 40px; }
+  input[type='checkbox'], input[type='radio'] { width: 20px; height: 20px; accent-color: var(--primary); }
+  .vocab-badges .chip { font-size: 0.8rem; }
+  .vocab-known { font-size: 0.875rem; min-height: 32px; }
+  .vocab-item { padding-bottom: 2.8rem; }
+}
