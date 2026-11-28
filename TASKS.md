@@ -13,7 +13,7 @@ English bank, `quantEn` + `dataSufficiency` generators, LTR questions, `npm test
 ## Step 3 — exam-aware UI
 - [x] Header exam switcher; Home = countdown, today's plan, estimated score, strengths/weaknesses.
 - [x] Practice/Simulations/Analytics show only the current exam's sections; simulations from `exam.simulation`.
-- [ ] `/exams/:id` landing pages (SEO, marketing), English UI for SAT/GMAT.
+- [x] `/exams/:id` landing pages (SEO, marketing), English UI for SAT/GMAT.
 - [x] Luxury redesign + entrance/page-transition animations (respect prefers-reduced-motion), mobile-first.
 - [ ] Paywall per exam pass (reuse entitlements.ts).
 

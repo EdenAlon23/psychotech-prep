@@ -22,6 +22,8 @@ const VocabPage = lazy(() => import('./pages/VocabPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const StartPage = lazy(() => import('./pages/StartPage'));
+const ExamPage = lazy(() => import('./pages/ExamPage'));
+const ExamsIndexPage = lazy(() => import('./pages/ExamPage').then((m) => ({ default: m.ExamsIndexPage })));
 
 /** Re-mounts on every route change (key = path) so the enter animation replays: a light page transition. */
 function PageTransition({ children }: { children: ReactNode }) {
@@ -48,6 +50,7 @@ const NAV: { to: string; he: string; en: string; end?: boolean; heOnly?: boolean
   { to: '/interview', he: 'ראיון', en: '', heOnly: true },
   { to: '/personality', he: 'אישיות', en: '', heOnly: true },
   { to: '/guide', he: 'מדריך', en: '', heOnly: true },
+  { to: '/exams', he: 'מבחנים', en: 'Exams' },
 ];
 
 const navFor = (lang: Lang) => NAV.filter((n) => lang === 'he' || !n.heOnly);
@@ -91,6 +94,8 @@ export default function App() {
             <Route path="/vocab" element={<VocabPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/upgrade" element={<UpgradePage />} />
+            <Route path="/exams" element={<ExamsIndexPage />} />
+            <Route path="/exams/:id" element={<ExamPage />} />
             <Route path="*" element={<div className="card empty"><p>{t('הדף לא נמצא', 'Page not found')}</p><Link className="btn" to="/">{t('לדף הבית', 'Back to home')}</Link></div>} />
           </Routes>
           </PageTransition>
@@ -98,6 +103,7 @@ export default function App() {
       </main>
       <footer className="footer">
         {t('נוצר על ידי', 'Created by')} <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{t(DEVELOPER.name, DEVELOPER.nameEn)}</a>
+        {' · '}<Link to="/exams">{t('כל המבחנים', 'All exams')}</Link>
         <br />
         {t('כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד.', 'All questions are original and written or generated for practice. Your data stays in this browser only.')}
       </footer>

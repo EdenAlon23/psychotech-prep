@@ -409,3 +409,9 @@ input[type=range] { accent-color: var(--gold); width: 100%; }
   .vocab-known { font-size: 0.875rem; min-height: 32px; }
   .vocab-item { padding-bottom: 2.8rem; }
 }
+
+/* Exam landing pages */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.exam-landing .hero-title { font-size: clamp(1.8rem, 6vw, 3rem); }
+a.exam-card { text-decoration: none; }
+.hero-content { position: relative; z-index: 1; }
