@@ -15,6 +15,6 @@ English bank, `quantEn` + `dataSufficiency` generators, LTR questions, `npm test
 - [x] Practice/Simulations/Analytics show only the current exam's sections; simulations from `exam.simulation`.
 - [x] `/exams/:id` landing pages (SEO, marketing), English UI for SAT/GMAT.
 - [x] Luxury redesign + entrance/page-transition animations (respect prefers-reduced-motion), mobile-first.
-- [ ] Paywall per exam pass (reuse entitlements.ts).
+- [x] Paywall per exam pass (reuse entitlements.ts).
 
 Rules: keep generators computing their own keys; every new generator gets a loop test in scripts/content.test.ts.

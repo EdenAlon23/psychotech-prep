@@ -1,10 +1,15 @@
 import type { QuizPlan } from '../models/attempt';
 import type { Access, FeatureKey, License, Limit, PlanId } from '../models/plan';
+import { EXAMS, type ExamId } from '../data/exams';
+import { currentExam } from './profile';
 
 /**
  * Plans and their limits. The single place to change what is free and what is paid.
  *
  * Paywall is OFF unless the build sets VITE_PAYWALL=on, so today every user keeps full access.
+ *
+ * Passes are per exam: a pass bought for the SAT unlocks the SAT only. Limits are checked against
+ * the exam the learner is currently preparing for (the profile).
  *
  * Honest limitation: this is a static site, so client-side gating can be bypassed by anyone who edits
  * localStorage. That is acceptable for a low-price product (the content itself is generated in the
@@ -58,15 +63,36 @@ export function saveLicense(license: License | null): void {
   }
 }
 
-/** Pure: which plan does this license give right now? */
-export function planFromLicense(license: License | null, now = Date.now()): PlanId {
+/** Pure: which plan does this license give right now, for this exam? */
+export function planFromLicense(license: License | null, now = Date.now(), examId?: ExamId): PlanId {
   if (!license) return 'free';
   if (Date.parse(license.validUntil) < now) return 'free';
   if (now - license.checkedAt > OFFLINE_GRACE_MS) return 'free';
+  // A pass for one exam doesn't unlock another; keys without an exam (older passes) unlock all.
+  if (license.examId && examId && license.examId !== examId) return 'free';
   return license.plan;
 }
 
-export const currentPlan = (): PlanId => (paywallEnabled() ? planFromLicense(getLicense()) : 'pass');
+export const currentPlan = (examId: ExamId = currentExam().id): PlanId =>
+  (paywallEnabled() ? planFromLicense(getLicense(), Date.now(), examId) : 'pass');
+
+/**
+ * Pure: which exam a purchased product is for, from the provider's product / variant names
+ * (e.g. variant "SAT" or product "Exam pass – Psychometric"). Undefined = not exam-specific.
+ */
+export function examFromProductName(...names: (string | null | undefined)[]): ExamId | undefined {
+  const text = names.filter(Boolean).join(' ').toLowerCase();
+  if (!text) return undefined;
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Whole-word match (letters in any script), so "psychotech" never matches inside "psychometric".
+  const has = (name: string) => new RegExp(`(^|[^\\p{L}])${escape(name.toLowerCase())}($|[^\\p{L}])`, 'u').test(text);
+  return EXAMS.find((e) => [e.id, e.nameShort, e.name].some(has))?.id;
+}
+
+/** Checkout link for an exam's pass: its own link if configured, else the shared one. */
+export function checkoutUrlFor(examId: ExamId, env: Record<string, string | undefined> = import.meta.env as unknown as Record<string, string | undefined>): string | undefined {
+  return env[`VITE_CHECKOUT_URL_${examId.toUpperCase()}`] || env.VITE_CHECKOUT_URL || undefined;
+}
 
 // ---------- Daily usage ----------
 type Usage = { day: string; counts: Partial<Record<FeatureKey, number>> };

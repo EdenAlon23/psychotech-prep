@@ -1,3 +1,5 @@
+import type { ExamId } from '../data/exams';
+
 /** Commercial plans. 'pass' = one-time payment for a fixed period (fits exam prep better than a subscription). */
 export type PlanId = 'free' | 'pass';
 
@@ -21,6 +23,8 @@ export interface License {
   validUntil: string;
   /** Last successful online check (ms). Offline use is allowed for a grace period after it. */
   checkedAt: number;
+  /** The exam this pass was bought for. Missing = all exams (keys issued before per-exam passes). */
+  examId?: ExamId;
 }
 
 export type Access =

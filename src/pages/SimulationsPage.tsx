@@ -34,7 +34,8 @@ export default function SimulationsPage() {
         return (
           <div className="card section-card featured mb rise">
             <div className="row spread"><h2 className="display" style={{ margin: 0 }}>{exam.icon} {exam.simulation.title}</h2>
-              {mine.length > 0 && <span className="chip good">{t('שיא', 'Best')}: {Math.max(...mine.map(attemptScore))}%</span>}</div>
+              {mine.length > 0 && <span className="chip good">{t('שיא', 'Best')}: {Math.max(...mine.map(attemptScore))}%</span>}
+              {!checkAccess('simulation_all', 0).allowed && <span className="chip warn">{t(`🔒 במנוי ${exam.nameShort}`, `🔒 ${exam.nameShort} pass`)}</span>}</div>
             <p className="muted" style={{ margin: 0 }}>{t(`במבנה של ${exam.name}: כל פרק עם זמן משלו, בלי משוב עד הסוף.`, `Structured like the ${exam.name}: each section timed separately, no feedback until the end.`)}</p>
             <div className="row"><span className="chip">⏱ {Math.round(totalMin)} {t("דק'", 'min')}</span><span className="chip">{totalQ} {t('שאלות', 'questions')}</span><span className="chip">{exam.simulation.blocks.length} {t('פרקים', 'sections')}</span></div>
             <div className="row"><button className="btn btn-gold" onClick={() => launchPlan(examSimulationPlan(exam, attempts), navigate)}>{t('התחלה ▶', 'Start ▶')}</button>
