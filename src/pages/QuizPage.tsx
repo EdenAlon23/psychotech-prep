@@ -160,6 +160,14 @@ export default function QuizPage() {
     return () => window.removeEventListener('pagehide', onHide);
   }, [commitQuestionTime, persist]);
 
+  // Closing the tab mid-simulation loses the session (sessionStorage), so ask first.
+  useEffect(() => {
+    if (plan?.mode !== 'simulation' || phase !== 'running') return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [plan, phase]);
+
   useEffect(() => {
     if (!showResumed) return;
     const t = setTimeout(() => setShowResumed(false), 5000);
