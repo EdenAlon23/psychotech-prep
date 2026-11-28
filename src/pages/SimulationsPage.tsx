@@ -7,10 +7,12 @@ import { currentExam } from '../services/profile';
 import { checkAccess } from '../services/entitlements';
 import { launchPlan } from '../services/launcher';
 import { getAttempts } from '../services/storage';
+import { useT } from '../i18n';
 
 export default function SimulationsPage() {
   const navigate = useNavigate();
   const attempts = useMemo(() => getAttempts(), []);
+  const { t } = useT();
 
   const start = (id: string) => {
     const plan = simulationPlan(id, attempts);
@@ -21,8 +23,8 @@ export default function SimulationsPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>סימולציות</h1>
-        <p>מבנה כמו במכון המיון: כל פרק עם זמן נפרד, בלי משוב עד הסוף. בכל סימולציה השאלות חדשות.</p>
+        <h1>{t('סימולציות', 'Practice tests')}</h1>
+        <p>{t('מבנה כמו במבחן האמיתי: כל פרק עם זמן נפרד, בלי משוב עד הסוף. בכל סימולציה השאלות חדשות.', 'Built like the real exam: each section has its own timer and there is no feedback until the end. Every test uses new questions.')}</p>
       </div>
       {(() => {
         const exam = currentExam();
@@ -32,11 +34,11 @@ export default function SimulationsPage() {
         return (
           <div className="card section-card featured mb rise">
             <div className="row spread"><h2 className="display" style={{ margin: 0 }}>{exam.icon} {exam.simulation.title}</h2>
-              {mine.length > 0 && <span className="chip good">שיא: {Math.max(...mine.map(attemptScore))}%</span>}</div>
-            <p className="muted" style={{ margin: 0 }}>במבנה של {exam.name}: כל פרק עם זמן משלו, בלי משוב עד הסוף.</p>
-            <div className="row"><span className="chip">⏱ {Math.round(totalMin)} דק'</span><span className="chip">{totalQ} שאלות</span><span className="chip">{exam.simulation.blocks.length} פרקים</span></div>
-            <div className="row"><button className="btn btn-gold" onClick={() => launchPlan(examSimulationPlan(exam, attempts), navigate)}>התחלה ▶</button>
-              {mine[0] && <Link className="btn btn-ghost" to={`/results/${mine[0].id}`}>תוצאה אחרונה</Link>}</div>
+              {mine.length > 0 && <span className="chip good">{t('שיא', 'Best')}: {Math.max(...mine.map(attemptScore))}%</span>}</div>
+            <p className="muted" style={{ margin: 0 }}>{t(`במבנה של ${exam.name}: כל פרק עם זמן משלו, בלי משוב עד הסוף.`, `Structured like the ${exam.name}: each section timed separately, no feedback until the end.`)}</p>
+            <div className="row"><span className="chip">⏱ {Math.round(totalMin)} {t("דק'", 'min')}</span><span className="chip">{totalQ} {t('שאלות', 'questions')}</span><span className="chip">{exam.simulation.blocks.length} {t('פרקים', 'sections')}</span></div>
+            <div className="row"><button className="btn btn-gold" onClick={() => launchPlan(examSimulationPlan(exam, attempts), navigate)}>{t('התחלה ▶', 'Start ▶')}</button>
+              {mine[0] && <Link className="btn btn-ghost" to={`/results/${mine[0].id}`}>{t('תוצאה אחרונה', 'Last result')}</Link>}</div>
           </div>
         );
       })()}
@@ -74,11 +76,11 @@ export default function SimulationsPage() {
         })}
       </div>}
       <div className="card mt">
-        <h3>טיפים לסימולציה</h3>
+        <h3>{t('טיפים לסימולציה', 'Test-day tips')}</h3>
         <ul className="tips">
-          <li>עשו אותה בתנאי מבחן: שקט, בלי טלפון, דף טיוטה ועט.</li>
-          <li>לא להיתקע: שאלה שלוקחת יותר מפי 2 מהזמן הממוצע – לסמן 🚩, לנחש ולהמשיך.</li>
-          <li>אחרי הסימולציה – עברו על כל הטעויות. הן נשמרות אוטומטית במחברת הטעויות.</li>
+          <li>{t('עשו אותה בתנאי מבחן: שקט, בלי טלפון, דף טיוטה ועט.', 'Take it under exam conditions: quiet room, no phone, scratch paper and a pen.')}</li>
+          <li>{t('לא להיתקע: שאלה שלוקחת יותר מפי 2 מהזמן הממוצע – לסמן 🚩, לנחש ולהמשיך.', "Don't get stuck: if a question takes twice the average time, flag it 🚩, guess and move on.")}</li>
+          <li>{t('אחרי הסימולציה – עברו על כל הטעויות. הן נשמרות אוטומטית במחברת הטעויות.', 'Afterwards, review every mistake. They are saved to the mistakes notebook automatically.')}</li>
         </ul>
       </div>
     </div>

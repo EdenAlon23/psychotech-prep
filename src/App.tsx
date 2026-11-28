@@ -6,6 +6,7 @@ import { DEVELOPER } from './components/DeveloperCard';
 import PremiumGate from './components/PremiumGate';
 import { paywallEnabled } from './services/entitlements';
 import { refreshLicense } from './services/license';
+import { applyDocumentLang, useT, type Lang } from './i18n';
 
 // Route-level code splitting: the quiz engine & content load only when needed.
 const PracticePage = lazy(() => import('./pages/PracticePage'));
@@ -31,21 +32,25 @@ function PageTransition({ children }: { children: ReactNode }) {
 
 function ExamChip() {
   const [exam, setExam] = useState(currentExam());
+  const { t } = useT();
   useEffect(() => { const f = () => setExam(currentExam()); window.addEventListener('pp:profile', f); return () => window.removeEventListener('pp:profile', f); }, []);
-  return <Link to="/start" className="exam-chip" title="החלפת מבחן">{exam.icon} {exam.nameShort} <span aria-hidden>▾</span></Link>;
+  return <Link to="/start" className="exam-chip" title={t('החלפת מבחן', 'Switch exam')}>{exam.icon} {exam.nameShort} <span aria-hidden>▾</span></Link>;
 }
 
-const NAV = [
-  { to: '/', label: 'בית', end: true },
-  { to: '/simulations', label: 'סימולציות' },
-  { to: '/practice', label: 'תרגול' },
-  { to: '/vocab', label: 'אוצר מילים' },
-  { to: '/analytics', label: 'ניתוח' },
-  { to: '/mistakes', label: 'טעויות' },
-  { to: '/interview', label: 'ראיון' },
-  { to: '/personality', label: 'אישיות' },
-  { to: '/guide', label: 'מדריך' },
+/** `he` = Hebrew-only pages (vocabulary, interview with an assessor, personality, the Israeli test guide). */
+const NAV: { to: string; he: string; en: string; end?: boolean; heOnly?: boolean }[] = [
+  { to: '/', he: 'בית', en: 'Home', end: true },
+  { to: '/simulations', he: 'סימולציות', en: 'Practice tests' },
+  { to: '/practice', he: 'תרגול', en: 'Practice' },
+  { to: '/vocab', he: 'אוצר מילים', en: '', heOnly: true },
+  { to: '/analytics', he: 'ניתוח', en: 'Analytics' },
+  { to: '/mistakes', he: 'טעויות', en: 'Mistakes' },
+  { to: '/interview', he: 'ראיון', en: '', heOnly: true },
+  { to: '/personality', he: 'אישיות', en: '', heOnly: true },
+  { to: '/guide', he: 'מדריך', en: '', heOnly: true },
 ];
+
+const navFor = (lang: Lang) => NAV.filter((n) => lang === 'he' || !n.heOnly);
 
 /**
  * HashRouter: the site is static (GitHub Pages / Vercel) – hash routes work on
@@ -54,20 +59,22 @@ const NAV = [
 export default function App() {
   // Re-check a stored license once a day so refunded keys stop working.
   useEffect(() => { if (paywallEnabled()) void refreshLicense(); }, []);
+  const { t, lang } = useT();
+  useEffect(() => { applyDocumentLang(lang); }, [lang]);
   return (
     <HashRouter>
       <header className="app-header">
         <div className="header-inner">
           <Link to="/" className="brand"><span className="brand-badge">✦</span> <span className="brand-name">PsychoTech<b>Prep</b></span></Link>
           <ExamChip />
-          <nav className="nav" aria-label="ניווט ראשי">
-            {NAV.map((n) => <NavLink key={n.to} to={n.to} end={n.end}>{n.label}</NavLink>)}
-            <NavLink to="/settings" aria-label="הגדרות">⚙️</NavLink>
+          <nav className="nav" aria-label={t('ניווט ראשי', 'Main navigation')}>
+            {navFor(lang).map((n) => <NavLink key={n.to} to={n.to} end={n.end}>{t(n.he, n.en)}</NavLink>)}
+            <NavLink to="/settings" aria-label={t('הגדרות', 'Settings')}>⚙️</NavLink>
           </nav>
         </div>
       </header>
       <main className="container">
-        <Suspense fallback={<div className="empty"><span className="spinner" aria-label="טוען" /></div>}>
+        <Suspense fallback={<div className="empty"><span className="spinner" aria-label={t('טוען', 'Loading')} /></div>}>
           <PageTransition>
           <Routes>
             <Route path="/start" element={<StartPage />} />
@@ -84,15 +91,15 @@ export default function App() {
             <Route path="/vocab" element={<VocabPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/upgrade" element={<UpgradePage />} />
-            <Route path="*" element={<div className="card empty"><p>הדף לא נמצא</p><Link className="btn" to="/">לדף הבית</Link></div>} />
+            <Route path="*" element={<div className="card empty"><p>{t('הדף לא נמצא', 'Page not found')}</p><Link className="btn" to="/">{t('לדף הבית', 'Back to home')}</Link></div>} />
           </Routes>
           </PageTransition>
         </Suspense>
       </main>
       <footer className="footer">
-        נוצר על ידי <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{DEVELOPER.name}</a>
+        {t('נוצר על ידי', 'Created by')} <a href={DEVELOPER.linkedin} target="_blank" rel="noopener noreferrer">{t(DEVELOPER.name, DEVELOPER.nameEn)}</a>
         <br />
-        כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד.
+        {t('כל השאלות מקוריות ונכתבו/נוצרו לצורכי תרגול. הנתונים נשמרים מקומית בדפדפן בלבד.', 'All questions are original and written or generated for practice. Your data stays in this browser only.')}
       </footer>
     </HashRouter>
   );

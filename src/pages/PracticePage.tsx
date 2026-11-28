@@ -10,6 +10,7 @@ import { accuracyColor } from '../components/Charts';
 import { currentExam, examSections } from '../services/profile';
 import { getVocabProgress } from '../services/storage';
 import { summarize } from '../services/vocab';
+import { sectionText, useT } from '../i18n';
 
 export default function PracticePage() {
   const navigate = useNavigate();
@@ -17,7 +18,9 @@ export default function PracticePage() {
   const attempts = useMemo(() => getAttempts(), []);
   const allowed = useMemo(() => examSections(currentExam()), []);
   const section = (params.get('s') as SectionId | null) ?? allowed[0] ?? 'analogies';
-  const meta = SECTION_BY_ID[section] ?? SECTIONS[0];
+  const { t, lang } = useT();
+  const base = SECTION_BY_ID[section] ?? SECTIONS[0];
+  const meta = { ...base, ...sectionText(base, lang) };
   const subtypes = useMemo(() => subtypesOf(meta.id), [meta.id]);
   const stByKey = useMemo(() => new Map(subtypeStats(attempts).map((s) => [`${s.section}|${s.subtype}`, s])), [attempts]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -37,22 +40,22 @@ export default function PracticePage() {
   return (
     <div>
       <div className="page-head">
-        <h1>תרגול לפי נושאים</h1>
-        <p>בחר נושא ותת-נושא. בתרגול מקבלים משוב והסבר מיד אחרי כל שאלה.</p>
+        <h1>{t('תרגול לפי נושאים', 'Practice by topic')}</h1>
+        <p>{t('בחר נושא ותת-נושא. בתרגול מקבלים משוב והסבר מיד אחרי כל שאלה.', 'Pick a section and topics. Practice gives feedback and an explanation right after each question.')}</p>
       </div>
 
       <div className="card mb row spread">
         <div>
-          <h3 style={{ margin: 0 }}>🎯 תרגול ממוקד חולשות</h3>
-          <p className="small muted" style={{ margin: 0 }}>המערכת בוחרת שאלות לפי תתי-הנושאים שבהם הדיוק והקצב שלך הכי חלשים.</p>
+          <h3 style={{ margin: 0 }}>{t('🎯 תרגול ממוקד חולשות', '🎯 Weak-spot practice')}</h3>
+          <p className="small muted" style={{ margin: 0 }}>{t('המערכת בוחרת שאלות לפי תתי-הנושאים שבהם הדיוק והקצב שלך הכי חלשים.', 'Questions are picked from the topics where your accuracy and pace are weakest.')}</p>
         </div>
-        <button className="btn" onClick={() => launchPlan(focusPlan(attempts), navigate)}>התחל (20 שאלות)</button>
+        <button className="btn" onClick={() => launchPlan(focusPlan(attempts), navigate)}>{t('התחל (20 שאלות)', 'Start (20 questions)')}</button>
       </div>
 
       <div className="tabs">
         {SECTIONS.filter((s) => allowed.includes(s.id)).map((s) => (
           <button key={s.id} className={s.id === meta.id ? 'active' : ''} onClick={() => choose(s.id)}>
-            {s.icon} {s.short}
+            {s.icon} {sectionText(s, lang).short}
           </button>
         ))}
       </div>
@@ -64,14 +67,14 @@ export default function PracticePage() {
           <h2>{meta.icon} {meta.title}</h2>
           <p className="muted">{meta.description}</p>
           <p className="small muted">
-            {isGenerated(meta.id) ? '♾️ שאלות שנוצרות אוטומטית – מספר בלתי מוגבל של וריאציות.' : `📚 מאגר של ${bankSize(meta.id)} שאלות מקוריות (קודם כל שאלות שעוד לא ראית).`}
+            {isGenerated(meta.id) ? t('♾️ שאלות שנוצרות אוטומטית – מספר בלתי מוגבל של וריאציות.', '♾️ Generated questions – unlimited variations.') : t(`📚 מאגר של ${bankSize(meta.id)} שאלות מקוריות (קודם כל שאלות שעוד לא ראית).`, `📚 A bank of ${bankSize(meta.id)} original questions (unseen ones first).`)}
           </p>
-          <h3>תתי-נושאים <span className="small muted">(ללא בחירה = הכול)</span></h3>
+          <h3>{t('תתי-נושאים', 'Topics')} <span className="small muted">{t('(ללא בחירה = הכול)', '(none selected = all)')}</span></h3>
           <div className="row mb">
             {subtypes.map((st) => {
               const s = stByKey.get(`${meta.id}|${st}`);
               return (
-                <button key={st} className={`chip${selected.includes(st) ? ' selected' : ''}`} onClick={() => toggle(st)} title={s ? `${s.total} שאלות` : 'טרם תורגל'}>
+                <button key={st} className={`chip${selected.includes(st) ? ' selected' : ''}`} onClick={() => toggle(st)} title={s ? `${s.total} ${t('שאלות', 'questions')}` : t('טרם תורגל', 'not practiced')}>
                   {st}
                   {s && <span style={{ color: selected.includes(st) ? '#fff' : accuracyColor(s.accuracy) }}>· {Math.round(s.accuracy * 100)}%</span>}
                 </button>
@@ -79,18 +82,18 @@ export default function PracticePage() {
             })}
           </div>
           <div className="row mb">
-            <label htmlFor="cnt">מספר שאלות</label>
+            <label htmlFor="cnt">{t('מספר שאלות', 'Questions')}</label>
             <select id="cnt" value={count} onChange={(e) => setCount(Number(e.target.value))} style={{ width: 100 }}>
               {[5, 10, 15, 20, 30].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
             <label className="row" style={{ fontWeight: 600 }}>
-              <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} /> עם טיימר (~{meta.targetSecPerQuestion} שנ' לשאלה)
+              <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} /> {t(`עם טיימר (~${meta.targetSecPerQuestion} שנ' לשאלה)`, `Timed (~${meta.targetSecPerQuestion}s per question)`)}
             </label>
           </div>
-          <button className="btn btn-block" onClick={start}>התחל תרגול ▶</button>
+          <button className="btn btn-block" onClick={start}>{t('התחל תרגול ▶', 'Start practice ▶')}</button>
         </div>
         <div className="card">
-          <h3>📌 איך לפתור</h3>
+          <h3>{t('📌 איך לפתור', '📌 How to solve')}</h3>
           <ul className="tips">{meta.tips.map((t) => <li key={t}>{t}</li>)}</ul>
         </div>
       </div>

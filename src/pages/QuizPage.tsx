@@ -7,6 +7,7 @@ import { clearActivePlan, getActivePlan, loadProgress, saveProgress, secondsLeft
 import { markMistakeRetried, recordMistakes, saveAttempt } from '../services/storage';
 import { applyQuizAnswers } from '../services/vocab';
 import { uid } from '../utils/random';
+import { sectionText, useT } from '../i18n';
 
 type Phase = 'intro' | 'running';
 
@@ -23,6 +24,7 @@ const fmtTime = (sec: number): string => {
 export default function QuizPage() {
   const navigate = useNavigate();
   const plan = useMemo(() => getActivePlan(), []);
+  const { t, lang } = useT();
   // Progress saved before a refresh / accidental reload of this same plan.
   const [restored] = useState(() => (plan ? loadProgress(plan) : null));
   const [blockIdx, setBlockIdx] = useState(restored?.blockIdx ?? 0);
@@ -211,8 +213,8 @@ export default function QuizPage() {
   if (!plan || !block) {
     return (
       <div className="card empty">
-        <p>אין תרגול פעיל.</p>
-        <Link className="btn" to="/">חזרה לדף הבית</Link>
+        <p>{t('אין תרגול פעיל.', 'No active practice.')}</p>
+        <Link className="btn" to="/">{t('חזרה לדף הבית', 'Back to home')}</Link>
       </div>
     );
   }
@@ -220,13 +222,13 @@ export default function QuizPage() {
   if (block.questions.length === 0) {
     return (
       <div className="card empty">
-        <p>לא נמצאו שאלות לבחירה הזו.</p>
-        <Link className="btn" to="/practice">חזרה</Link>
+        <p>{t('לא נמצאו שאלות לבחירה הזו.', 'No questions match this selection.')}</p>
+        <Link className="btn" to="/practice">{t('חזרה', 'Back')}</Link>
       </div>
     );
   }
 
-  const meta = SECTION_BY_ID[block.section];
+  const meta = { ...SECTION_BY_ID[block.section], ...sectionText(SECTION_BY_ID[block.section], lang) };
   const totalQuestions = plan.blocks.reduce((s, b) => s + b.questions.length, 0);
   const doneBefore = plan.blocks.slice(0, blockIdx).reduce((s, b) => s + b.questions.length, 0);
 
@@ -234,15 +236,15 @@ export default function QuizPage() {
     return (
       <div className="card" style={{ maxWidth: 720, margin: '0 auto' }}>
         <div className="row spread">
-          <span className="chip primary">פרק {blockIdx + 1} מתוך {plan.blocks.length}</span>
-          <span className="chip">{block.questions.length} שאלות · {fmtTime(block.timeLimitSec ?? 0)} דקות</span>
+          <span className="chip primary">{t(`פרק ${blockIdx + 1} מתוך ${plan.blocks.length}`, `Section ${blockIdx + 1} of ${plan.blocks.length}`)}</span>
+          <span className="chip">{block.questions.length} {t('שאלות', 'questions')} · {fmtTime(block.timeLimitSec ?? 0)} {t('דקות', 'minutes')}</span>
         </div>
         <h1 className="mt">{meta.icon} {block.title}</h1>
         <p>{meta.description}</p>
-        <h3>אסטרטגיה לפרק</h3>
+        <h3>{t('אסטרטגיה לפרק', 'Strategy for this section')}</h3>
         <ul className="tips">{meta.tips.map((t) => <li key={t}>{t}</li>)}</ul>
-        <p className="muted small">בסימולציה אין משוב במהלך הפרק. אפשר לנווט בין השאלות ולסמן שאלות לחזרה (🚩). כשהזמן נגמר – הפרק נסגר אוטומטית.</p>
-        <button className="btn btn-block mt" onClick={() => setPhase('running')}>התחל פרק ▶</button>
+        <p className="muted small">{t('בסימולציה אין משוב במהלך הפרק. אפשר לנווט בין השאלות ולסמן שאלות לחזרה (🚩). כשהזמן נגמר – הפרק נסגר אוטומטית.', 'No feedback during a test section. You can move between questions and flag them for review (🚩). When time runs out, the section closes automatically.')}</p>
+        <button className="btn btn-block mt" onClick={() => setPhase('running')}>{t('התחל פרק ▶', 'Start section ▶')}</button>
       </div>
     );
   }
@@ -254,8 +256,8 @@ export default function QuizPage() {
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
       {showResumed && (
         <div className="resume-note" role="status">
-          <span>↺ חזרת למקום שבו עצרת{timeLeft !== null ? ' – הטיימר המשיך לרוץ' : ''}.</span>
-          <button className="btn btn-ghost btn-sm" onClick={() => setShowResumed(false)} aria-label="סגירת ההודעה">✕</button>
+          <span>{t('↺ חזרת למקום שבו עצרת', '↺ Picked up where you left off')}{timeLeft !== null ? t(' – הטיימר המשיך לרוץ', ' – the timer kept running') : ''}.</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowResumed(false)} aria-label={t('סגירת ההודעה', 'Dismiss')}>✕</button>
         </div>
       )}
       <div className="quiz-top">
@@ -276,39 +278,39 @@ export default function QuizPage() {
         )}
         <div className="row spread mt">
           <div className="row">
-            {plan.mode === 'simulation' && qIdx > 0 && <button className="btn btn-ghost" onClick={() => goTo(qIdx - 1)}>→ הקודמת</button>}
+            {plan.mode === 'simulation' && qIdx > 0 && <button className="btn btn-ghost" onClick={() => goTo(qIdx - 1)}>{t('→ הקודמת', '← Previous')}</button>}
             {plan.mode === 'simulation' && question && (
               <button
                 className="btn btn-ghost"
                 onClick={() => setFlagged((f) => { const n = new Set(f); if (n.has(question.id)) n.delete(question.id); else n.add(question.id); return n; })}
               >
-                {flagged.has(question.id) ? '🚩 מסומנת' : '🏳 סמן לחזרה'}
+                {flagged.has(question.id) ? t('🚩 מסומנת', '🚩 Flagged') : t('🏳 סמן לחזרה', '🏳 Flag for review')}
               </button>
             )}
           </div>
           <div className="row">
             {plan.mode === 'simulation' ? (
               <>
-                {qIdx + 1 < block.questions.length && <button className="btn" onClick={next}>הבאה ←</button>}
+                {qIdx + 1 < block.questions.length && <button className="btn" onClick={next}>{t('הבאה ←', 'Next →')}</button>}
                 <button className={qIdx + 1 < block.questions.length ? 'btn btn-ghost' : 'btn'} onClick={() => {
                   const unanswered = block.questions.length - answeredCount;
-                  if (unanswered === 0 || window.confirm(`נותרו ${unanswered} שאלות ללא מענה. לסיים את הפרק?`)) endBlock(false);
+                  if (unanswered === 0 || window.confirm(t(`נותרו ${unanswered} שאלות ללא מענה. לסיים את הפרק?`, `${unanswered} questions are unanswered. Finish the section?`))) endBlock(false);
                 }}>
-                  סיים פרק ✓
+                  {t('סיים פרק ✓', 'Finish section ✓')}
                 </button>
               </>
             ) : (
               <button className="btn" onClick={next} disabled={!isRevealed}>
-                {qIdx + 1 < block.questions.length ? 'הבאה ←' : blockIdx + 1 < plan.blocks.length ? 'לחלק הבא ←' : 'סיום וצפייה בתוצאות'}
+                {qIdx + 1 < block.questions.length ? t('הבאה ←', 'Next →') : blockIdx + 1 < plan.blocks.length ? t('לחלק הבא ←', 'Next part →') : t('סיום וצפייה בתוצאות', 'Finish and see results')}
               </button>
             )}
           </div>
         </div>
-        <p className="small muted mt" style={{ marginBottom: 0 }}>קיצורים: <kbd>1</kbd>–<kbd>4</kbd> לבחירה, <kbd>Enter</kbd> לשאלה הבאה.</p>
+        <p className="small muted mt" style={{ marginBottom: 0 }}>{t('קיצורים:', 'Shortcuts:')} <kbd>1</kbd>–<kbd>{question?.choices.length ?? 4}</kbd> {t('לבחירה', 'to choose')}, <kbd>Enter</kbd> {t('לשאלה הבאה.', 'for the next question.')}</p>
       </div>
 
       {plan.mode === 'simulation' && (
-        <div className="q-nav" aria-label="ניווט בין שאלות">
+        <div className="q-nav" aria-label={t('ניווט בין שאלות', 'Question navigator')}>
           {block.questions.map((q, i) => (
             <button
               key={q.id}
@@ -323,14 +325,14 @@ export default function QuizPage() {
 
       <div className="center mt">
         <button className="btn btn-ghost btn-sm" onClick={() => {
-          if (window.confirm('לצאת? ההתקדמות בתרגול הנוכחי תישמר כפי שהיא.')) {
+          if (window.confirm(t('לצאת? ההתקדמות בתרגול הנוכחי תישמר כפי שהיא.', 'Leave? Your progress so far will be saved.'))) {
             for (let i = blockIdx; i < plan.blocks.length; i++) {
               if (i > blockIdx) blockResultsRef.current.push({ section: plan.blocks[i].section, total: plan.blocks[i].questions.length, correct: 0, answered: 0, timeMs: 0, timedOut: false });
             }
             commitQuestionTime();
             finishAll();
           }
-        }}>יציאה ושמירה</button>
+        }}>{t('יציאה ושמירה', 'Save and exit')}</button>
       </div>
     </div>
   );
