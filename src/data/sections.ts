@@ -43,6 +43,11 @@ export const SECTIONS: SectionMeta[] = [
   },
   {
     id: 'english', title: 'אנגלית', short: 'אנגלית', icon: '🇬🇧', targetSecPerQuestion: 45, lang: 'en',
+    en: {
+      title: 'Verbal (English)', short: 'Verbal',
+      description: 'Vocabulary, sentence completion, restatements and analogies — SAT Reading & Writing and GMAT Verbal style.',
+      tips: ['In sentence completion, find the signal word (although, because, despite) before reading the options.', 'Restatements must keep the exact meaning — watch for double negatives ("not without").', 'Learn word roots: bene = good, mal = bad, chron = time.'],
+    },
     description: 'Vocabulary, sentence completion, restatements and analogies — for the psychometric English section, SAT and GMAT Verbal.',
     tips: ['In sentence completion, find the signal word (although, because, despite) before reading the options.', 'Restatements must keep the exact meaning — watch for double negatives ("not without").', 'Learn word roots: bene = good, mal = bad, chron = time.'],
   },

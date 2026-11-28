@@ -1,7 +1,9 @@
 import type { Question } from '../models/question';
 import { FigureBoard, FigureSvg } from './FigureView';
+import { useT } from '../i18n';
 
-const LETTERS = ['א', 'ב', 'ג', 'ד', 'ה'];
+const LETTERS_HE = ['א', 'ב', 'ג', 'ד', 'ה'];
+const LETTERS_EN = ['A', 'B', 'C', 'D', 'E'];
 
 interface Props {
   question: Question;
@@ -13,7 +15,10 @@ interface Props {
 
 /** Presentational only – no state, no timers. Reused by quiz, review and mistakes screens. */
 export function QuestionView({ question: q, selected, onSelect, reveal }: Props) {
+  const { t } = useT();
   const isFigure = q.choices.some((c) => c.figure);
+  // Letters follow the question's own language: an English item is labelled A–E even on the Hebrew UI.
+  const LETTERS = q.dir === 'ltr' ? LETTERS_EN : LETTERS_HE;
   const hebrewBlock = q.codeBlock && /[֐-׿]/.test(q.codeBlock) && q.section === 'attention' && q.subtype === 'ספירת תווים';
   return (
     <div dir={q.dir} lang={q.dir === 'ltr' ? 'en' : undefined}>
@@ -53,7 +58,7 @@ export function QuestionView({ question: q, selected, onSelect, reveal }: Props)
       </div>
       {reveal && (
         <div className={`feedback ${selected === q.answerIndex ? 'good' : 'bad'}`}>
-          <strong>{selected === q.answerIndex ? '✓ נכון!' : selected < 0 ? '⏭ לא נענתה' : '✗ לא נכון'}</strong>{' '}
+          <strong>{selected === q.answerIndex ? t('✓ נכון!', '✓ Correct!') : selected < 0 ? t('⏭ לא נענתה', '⏭ Not answered') : t('✗ לא נכון', '✗ Incorrect')}</strong>{' '}
           <span>{q.explanation}</span>
         </div>
       )}

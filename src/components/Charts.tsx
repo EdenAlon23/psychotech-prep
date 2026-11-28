@@ -1,3 +1,5 @@
+import { tr } from '../i18n';
+
 /** Lightweight SVG charts – no chart library needed for these two shapes. */
 
 export function accuracyColor(acc: number): string {
@@ -23,7 +25,7 @@ export function BarList({ rows }: { rows: { label: string; value: number; hint?:
 }
 
 export function LineChart({ points, height = 180 }: { points: { label: string; value: number }[]; height?: number }) {
-  if (points.length === 0) return <div className="empty">אין עדיין נתונים</div>;
+  if (points.length === 0) return <div className="empty">{tr('אין עדיין נתונים', 'No data yet')}</div>;
   const W = 600;
   const H = height;
   const pad = { t: 14, r: 16, b: 26, l: 34 };
@@ -33,7 +35,7 @@ export function LineChart({ points, height = 180 }: { points: { label: string; v
   const y = (v: number) => pad.t + ih - (v / 100) * ih;
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.value)}`).join(' ');
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="גרף ציונים לאורך זמן" style={{ direction: 'ltr' }}>
+    <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr('גרף ציונים לאורך זמן', 'Scores over time')} style={{ direction: 'ltr' }}>
       {[0, 25, 50, 75, 100].map((g) => (
         <g key={g}>
           <line x1={pad.l} x2={W - pad.r} y1={y(g)} y2={y(g)} stroke="var(--border)" />

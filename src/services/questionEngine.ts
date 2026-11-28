@@ -1,5 +1,6 @@
 import type { ExamDef } from '../data/exams';
-import { getProfile, sectionAbility, targetDifficulty } from './profile';
+import { currentExam, examSections, getProfile, sectionAbility, targetDifficulty } from './profile';
+import { sectionText, tr } from '../i18n';
 import type { Attempt, QuizBlock, QuizPlan } from '../models/attempt';
 import type { Question, SectionId } from '../models/question';
 import { analogyQuestions } from '../data/analogies';
@@ -98,11 +99,11 @@ export function buildQuestions(section: SectionId, count: number, opts: BuildOpt
 export const seenIdsFrom = (attempts: Attempt[]): Set<string> => new Set(attempts.flatMap((a) => a.answers.map((x) => x.questionId)));
 
 export function practicePlan(section: SectionId, count: number, subtypes: string[], attempts: Attempt[], timed: boolean, adaptive = true): QuizPlan {
-  const meta = SECTION_BY_ID[section];
+  const meta = { ...SECTION_BY_ID[section], ...sectionText(SECTION_BY_ID[section]) };
   const difficulty = adaptive ? targetDifficulty(sectionAbility(attempts, section, getProfile()?.level ?? 2).ability) : undefined;
   return {
     mode: 'practice',
-    title: `תרגול – ${meta.title}`,
+    title: `${tr('תרגול', 'Practice')} – ${meta.title}`,
     immediateFeedback: true,
     blocks: [{
       section, title: meta.title,
@@ -122,7 +123,7 @@ export function examSimulationPlan(exam: ExamDef, attempts: Attempt[]): QuizPlan
     immediateFeedback: false,
     blocks: exam.simulation.blocks.map<QuizBlock>((b) => ({
       section: b.section,
-      title: b.label ?? SECTION_BY_ID[b.section].title,
+      title: b.label ?? sectionText(SECTION_BY_ID[b.section]).title,
       timeLimitSec: Math.round(b.minutes * 60),
       questions: buildQuestions(b.section, b.count, { seenIds: seen }),
     })),
@@ -153,29 +154,33 @@ export function simulationPlan(simId: string, attempts: Attempt[]): QuizPlan | n
  * strong topics still get occasional maintenance questions.
  */
 export function focusPlan(attempts: Attempt[], total = 20): QuizPlan {
-  const stats = subtypeStats(attempts).filter((s) => s.total >= 2).sort((a, b) => b.weakness - a.weakness).slice(0, 6);
+  // Only the chosen exam's sections: an SAT learner must never get Hebrew items (and vice versa).
+  const allowed = new Set(examSections(currentExam()));
+  const stats = subtypeStats(attempts).filter((s) => s.total >= 2 && allowed.has(s.section)).sort((a, b) => b.weakness - a.weakness).slice(0, 6);
   const seen = seenIdsFrom(attempts);
   const blocks: QuizBlock[] = [];
   if (stats.length === 0) {
-    // Cold start: a balanced sampler across sections.
-    for (const s of ['analogies', 'numberSeries', 'figures', 'math', 'instructions'] as SectionId[])
-      blocks.push({ section: s, title: SECTION_BY_ID[s].title, questions: buildQuestions(s, 4, { seenIds: seen }) });
+    // Cold start: a balanced sampler across the exam's sections.
+    const sections = [...allowed].slice(0, 5) as SectionId[];
+    const per = Math.max(2, Math.round(total / sections.length));
+    for (const s of sections)
+      blocks.push({ section: s, title: sectionText(SECTION_BY_ID[s]).title, questions: buildQuestions(s, per, { seenIds: seen }) });
   } else {
     const sum = stats.reduce((acc, s) => acc + s.weakness, 0);
     for (const s of stats) {
       const n = Math.max(2, Math.round((s.weakness / sum) * total));
       const qs = buildQuestions(s.section, n, { subtypes: [s.subtype], seenIds: seen });
-      if (qs.length) blocks.push({ section: s.section, title: `${SECTION_BY_ID[s.section].title} – ${s.subtype}`, questions: qs });
+      if (qs.length) blocks.push({ section: s.section, title: `${sectionText(SECTION_BY_ID[s.section]).title} – ${s.subtype}`, questions: qs });
     }
   }
-  return { mode: 'focus', title: 'תרגול ממוקד חולשות', immediateFeedback: true, blocks };
+  return { mode: 'focus', title: tr('תרגול ממוקד חולשות', 'Focused practice: weak spots'), immediateFeedback: true, blocks };
 }
 
 export function mistakesPlan(questions: Question[]): QuizPlan {
   return {
     mode: 'mistakes',
-    title: 'חזרה על טעויות',
+    title: tr('חזרה על טעויות', 'Mistakes review'),
     immediateFeedback: true,
-    blocks: [{ section: questions[0]?.section ?? 'analogies', title: 'מחברת טעויות', questions }],
+    blocks: [{ section: questions[0]?.section ?? 'analogies', title: tr('מחברת טעויות', 'Mistakes notebook'), questions }],
   };
 }

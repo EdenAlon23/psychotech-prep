@@ -1,6 +1,8 @@
 import type { AnswerRecord, Attempt } from '../models/attempt';
 import type { SectionId } from '../models/question';
 import { SECTION_BY_ID, SECTIONS } from '../data/sections';
+import { sectionText, tr } from '../i18n';
+import { currentExam, examSections } from './profile';
 
 export interface Stat {
   total: number;
@@ -111,23 +113,32 @@ export interface Recommendation {
 export function recommendations(attempts: Attempt[]): Recommendation[] {
   const recs: Recommendation[] = [];
   const stats = sectionStats(attempts);
-  const untouched = SECTIONS.filter((s) => stats[s.id].total === 0);
+  const allowed = new Set(examSections(currentExam()));
+  const examSecs = SECTIONS.filter((s) => allowed.has(s.id));
+  const title = (id: SectionId) => sectionText(SECTION_BY_ID[id]).title;
+  const untouched = examSecs.filter((s) => stats[s.id].total === 0);
   if (attempts.length === 0) {
-    return [{ text: 'התחל בסימולציה מקוצרת כדי לקבל תמונת מצב ראשונית – המערכת תתאים את התרגול לפי התוצאות.' }];
+    return [{ text: tr('התחל בסימולציה כדי לקבל תמונת מצב ראשונית – המערכת תתאים את התרגול לפי התוצאות.', 'Start with a practice test to get a baseline – practice then adapts to your results.') }];
   }
   for (const w of weakestSubtypes(attempts, 3)) {
     recs.push({
-      text: `חיזוק: ${SECTION_BY_ID[w.section].title} – ${w.subtype} (דיוק ${Math.round(w.accuracy * 100)}% ב-${w.total} שאלות).`,
+      text: tr(
+        `חיזוק: ${title(w.section)} – ${w.subtype} (דיוק ${Math.round(w.accuracy * 100)}% ב-${w.total} שאלות).`,
+        `Strengthen: ${title(w.section)} – ${w.subtype} (${Math.round(w.accuracy * 100)}% accuracy on ${w.total} questions).`,
+      ),
       section: w.section, subtype: w.subtype,
     });
   }
-  for (const s of SECTIONS) {
+  for (const s of examSecs) {
     const st = stats[s.id];
     if (st.total >= 5 && st.avgTimeSec > s.targetSecPerQuestion * 1.3)
-      recs.push({ text: `קצב: ב${s.title} ממוצע ${Math.round(st.avgTimeSec)} שנ' לשאלה (יעד ~${s.targetSecPerQuestion}). תרגלו עם טיימר.`, section: s.id });
+      recs.push({ text: tr(
+        `קצב: ב${title(s.id)} ממוצע ${Math.round(st.avgTimeSec)} שנ' לשאלה (יעד ~${s.targetSecPerQuestion}). תרגלו עם טיימר.`,
+        `Pace: ${title(s.id)} averages ${Math.round(st.avgTimeSec)}s per question (target ~${s.targetSecPerQuestion}s). Practice with the timer on.`,
+      ), section: s.id });
   }
   if (untouched.length > 0)
-    recs.push({ text: `עוד לא תרגלת: ${untouched.map((s) => s.title).join(', ')}.`, section: untouched[0].id });
-  if (simulationHistory(attempts).length === 0) recs.push({ text: 'עשה לפחות סימולציה מלאה אחת עם זמן לפני המבחן.' });
+    recs.push({ text: tr(`עוד לא תרגלת: ${untouched.map((s) => title(s.id)).join(', ')}.`, `Not practiced yet: ${untouched.map((s) => title(s.id)).join(', ')}.`), section: untouched[0].id });
+  if (simulationHistory(attempts).length === 0) recs.push({ text: tr('עשה לפחות סימולציה מלאה אחת עם זמן לפני המבחן.', 'Take at least one full timed practice test before exam day.') });
   return recs.slice(0, 6);
 }

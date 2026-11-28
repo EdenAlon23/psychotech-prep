@@ -73,4 +73,6 @@ export interface SectionMeta {
   tips: string[];
   /** 'en' sections are rendered LTR. */
   lang?: 'he' | 'en';
+  /** Texts for the English UI (SAT / GMAT). */
+  en?: { title: string; short: string; description: string; tips: string[] };
 }
