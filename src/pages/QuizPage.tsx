@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { AnswerRecord, Attempt, SectionResult } from '../models/attempt';
 import { QuestionView } from '../components/QuestionView';
 import { SECTION_BY_ID } from '../data/sections';
-import { clearActivePlan, getActivePlan } from '../services/session';
+import { clearActivePlan, getActivePlan, loadProgress, saveProgress, secondsLeft } from '../services/session';
 import { markMistakeRetried, recordMistakes, saveAttempt } from '../services/storage';
 import { applyQuizAnswers } from '../services/vocab';
 import { uid } from '../utils/random';
@@ -23,19 +23,31 @@ const fmtTime = (sec: number): string => {
 export default function QuizPage() {
   const navigate = useNavigate();
   const plan = useMemo(() => getActivePlan(), []);
-  const [blockIdx, setBlockIdx] = useState(0);
-  const [phase, setPhase] = useState<Phase>(plan?.mode === 'simulation' ? 'intro' : 'running');
-  const [qIdx, setQIdx] = useState(0);
-  const [chosen, setChosen] = useState<Record<string, number>>({});
-  const [revealed, setRevealed] = useState<Set<string>>(new Set());
-  const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const timesRef = useRef<Record<string, number>>({});
-  const qStartRef = useRef<number>(Date.now());
-  const blockStartRef = useRef<number>(Date.now());
-  const blockResultsRef = useRef<SectionResult[]>([]);
-  const startedAtRef = useRef<number>(Date.now());
+  // Progress saved before a refresh / accidental reload of this same plan.
+  const [restored] = useState(() => (plan ? loadProgress(plan) : null));
+  const [blockIdx, setBlockIdx] = useState(restored?.blockIdx ?? 0);
+  const [phase, setPhase] = useState<Phase>(restored?.phase ?? (plan?.mode === 'simulation' ? 'intro' : 'running'));
+  const [qIdx, setQIdx] = useState(restored?.qIdx ?? 0);
+  const [chosen, setChosen] = useState<Record<string, number>>(restored?.chosen ?? {});
+  const [revealed, setRevealed] = useState<Set<string>>(() => new Set(restored?.revealed));
+  const [flagged, setFlagged] = useState<Set<string>>(() => new Set(restored?.flagged));
+  /** Absolute end of the block countdown: survives reloads and doesn't drift in background tabs. */
+  const [deadline, setDeadline] = useState<number | null>(restored?.deadline ?? null);
+  const [now, setNow] = useState(() => Date.now());
+  const [showResumed, setShowResumed] = useState(restored !== null);
+  const timesRef = useRef<Record<string, number>>(restored?.timesMs ?? {});
+  const qStartRef = useRef<number>(0);
+  const blockStartRef = useRef<number>(0);
+  const blockResultsRef = useRef<SectionResult[]>(restored?.blockResults ?? []);
+  const startedAtRef = useRef<number>(restored?.startedAt ?? 0);
   const finishedRef = useRef(false);
+  const timeLeft = deadline === null ? null : secondsLeft(deadline, now);
+
+  useEffect(() => {
+    const t = Date.now();
+    qStartRef.current = t;
+    if (!startedAtRef.current) startedAtRef.current = t;
+  }, []);
 
   const block = plan?.blocks[blockIdx];
   const question = block?.questions[qIdx];
@@ -96,7 +108,7 @@ export default function QuizPage() {
     if (blockIdx + 1 < plan.blocks.length) {
       setBlockIdx((b) => b + 1);
       setQIdx(0);
-      setTimeLeft(null);
+      setDeadline(null);
       setPhase(plan.mode === 'simulation' ? 'intro' : 'running');
       blockStartRef.current = Date.now();
       qStartRef.current = Date.now();
@@ -105,24 +117,54 @@ export default function QuizPage() {
     }
   }, [plan, block, blockIdx, chosen, commitQuestionTime, finishAll]);
 
-  // Start block timer when a block begins running.
+  // Start the block timer when a block begins running (a restored block keeps its deadline).
   useEffect(() => {
     if (phase !== 'running' || !block) return;
-    blockStartRef.current = Date.now();
-    qStartRef.current = Date.now();
-    setTimeLeft(block.timeLimitSec ?? null);
+    const t = Date.now();
+    qStartRef.current = t;
+    const limitMs = (block.timeLimitSec ?? 0) * 1000;
+    setDeadline((d) => {
+      if (d !== null) { blockStartRef.current = d - limitMs; return d; }
+      blockStartRef.current = t;
+      return block.timeLimitSec ? t + limitMs : null;
+    });
   }, [phase, blockIdx, block]);
 
-  // Countdown tick.
+  // Countdown tick: re-read the clock rather than decrementing, so the timer stays exact.
   useEffect(() => {
-    if (phase !== 'running' || timeLeft === null) return;
-    if (timeLeft <= 0) {
-      endBlock(true);
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft((s) => (s === null ? null : s - 1)), 1000);
-    return () => clearTimeout(t);
+    if (phase !== 'running' || deadline === null) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [phase, deadline]);
+
+  useEffect(() => {
+    if (phase === 'running' && timeLeft !== null && timeLeft <= 0) endBlock(true);
   }, [timeLeft, phase, endBlock]);
+
+  // Persist progress on every change so a refresh resumes at the same question.
+  const persist = useCallback(() => {
+    if (!plan || finishedRef.current) return;
+    saveProgress({
+      version: 1, blockIdx, qIdx, phase, chosen,
+      revealed: [...revealed], flagged: [...flagged], deadline,
+      blockResults: blockResultsRef.current, timesMs: timesRef.current, startedAt: startedAtRef.current,
+    });
+  }, [plan, blockIdx, qIdx, phase, chosen, revealed, flagged, deadline]);
+
+  useEffect(() => { persist(); }, [persist]);
+
+  // On reload / tab close, also bank the time spent on the current question.
+  useEffect(() => {
+    const onHide = () => { commitQuestionTime(); persist(); };
+    window.addEventListener('pagehide', onHide);
+    return () => window.removeEventListener('pagehide', onHide);
+  }, [commitQuestionTime, persist]);
+
+  useEffect(() => {
+    if (!showResumed) return;
+    const t = setTimeout(() => setShowResumed(false), 5000);
+    return () => clearTimeout(t);
+  }, [showResumed]);
 
   const goTo = useCallback((i: number) => {
     commitQuestionTime();
@@ -202,6 +244,12 @@ export default function QuizPage() {
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
+      {showResumed && (
+        <div className="resume-note" role="status">
+          <span>↺ חזרת למקום שבו עצרת{timeLeft !== null ? ' – הטיימר המשיך לרוץ' : ''}.</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowResumed(false)} aria-label="סגירת ההודעה">✕</button>
+        </div>
+      )}
       <div className="quiz-top">
         <div>
           <div className="small muted">{plan.title}</div>
